@@ -9,46 +9,68 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const ConvertAPI = require('convertapi');
-const convertapi = new ConvertAPI(process.env.CONVERTAPI_SECRET);
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, { maxHttpBufferSize: 1e8 });
 
-const PORT = process.env.PORT || 3000;
+// ========================================================================
+// === MODIFICATION IMPORTANTE POUR CORRIGER L'ERREUR SUR VERCEL ===
+// ========================================================================
+// On ajoute la configuration CORS pour autoriser les requêtes POST
+// venant du client, ce qui est nécessaire pour le "long polling" de Socket.IO.
+const io = socketIo(server, {
+  maxHttpBufferSize: 1e8,
+  cors: {
+    origin: "*", // Autorise les connexions de n'importe quelle origine.
+    methods: ["GET", "POST"] // Autorise les méthodes GET et POST.
+  }
+});
+// ========================================================================
+
 const MONGO_URL = process.env.MONGO_URL;
+const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
 const APP_VERSION = Date.now();
 const classDatabases = {};
 
-// Vercel gère les fichiers statiques, mais on laisse cette ligne pour la cohérence
-// Elle pointe maintenant correctement vers le dossier public à la racine.
+// Vérification au démarrage que les variables d'environnement sont bien présentes
+if (!MONGO_URL) {
+    console.error("ERREUR CRITIQUE: La variable d'environnement MONGO_URL n'est pas définie !");
+}
+if (!CONVERTAPI_SECRET) {
+    console.error("ERREUR CRITIQUE: La variable d'environnement CONVERTAPI_SECRET n'est pas définie !");
+}
+
+const convertapi = new ConvertAPI(CONVERTAPI_SECRET);
+
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
 
-// On ajoute une route de base pour vérifier que le serveur est en ligne
+// Route pour servir le fichier principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-
 async function connectToClassDatabase(className) {
     if (classDatabases[className]) return classDatabases[className];
-    if (!MONGO_URL) { console.error("MONGO_URL is not defined."); return null; }
+    if (!MONGO_URL) { 
+        console.error("MONGO_URL n'est pas défini. Impossible de se connecter."); 
+        return null; 
+    }
     try {
         const client = await MongoClient.connect(MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
         const dbName = `Classe_${className.replace(/[^a-zA-Z0-9]/g, '_')}`;
         const db = client.db(dbName);
         classDatabases[className] = db;
-        console.log(`Connected to database ${dbName}`);
+        console.log(`Connecté à la base de données ${dbName}`);
         return db;
     } catch (error) {
-        console.error(`Error connecting to database for class ${className}:`, error);
+        console.error(`Erreur de connexion à la base de données pour la classe ${className}:`, error);
         return null;
     }
 }
 
 io.on('connection', (socket) => {
-    console.log(`Client connected: ${socket.id}`);
+    console.log(`Client connecté: ${socket.id}`);
     socket.emit('appVersion', APP_VERSION);
 
     socket.on('generatePdfOnServer', async ({ docxBuffer, fileName }, callback) => {
@@ -60,7 +82,7 @@ io.on('connection', (socket) => {
         let tempPdfPath = null;
         try {
             const timestamp = Date.now();
-            // Important : Utiliser /tmp pour les fichiers temporaires sur Vercel
+            // Utiliser /tmp pour les fichiers temporaires sur Vercel
             tempDocxPath = path.join('/tmp', `docx-in-${timestamp}-${fileName}`);
             tempPdfPath = path.join('/tmp', `pdf-out-${timestamp}.pdf`);
             const nodeBuffer = Buffer.from(docxBuffer);
@@ -196,6 +218,5 @@ io.on('connection', (socket) => {
     });
 });
 
-// N'exportez que le serveur pour Vercel.
-// La ligne server.listen n'est pas nécessaire car Vercel gère le démarrage du serveur.
+// Vercel démarre le serveur, donc on exporte l'instance.
 module.exports = server;
