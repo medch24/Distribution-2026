@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { MongoClient } = require('mongodb');
 const socketIo = require('socket.io');
+const cors = require('cors'); // <-- 1. IMPORTER LE PACKAGE CORS
 require('dotenv').config();
 
 // Modules pour la gestion des fichiers
@@ -14,15 +15,18 @@ const app = express();
 const server = http.createServer(app);
 
 // ========================================================================
-// === MODIFICATION IMPORTANTE POUR CORRIGER L'ERREUR SUR VERCEL ===
+// === CONFIGURATION FINALE POUR LA COMPATIBILITÉ VERCEL ===
 // ========================================================================
-// On ajoute la configuration CORS pour autoriser les requêtes POST
-// venant du client, ce qui est nécessaire pour le "long polling" de Socket.IO.
+
+// 2. UTILISER LE MIDDLEWARE CORS POUR EXPRESS
+// Cela doit être fait AVANT la configuration de Socket.IO et des routes.
+// Cela résoudra les erreurs 400 Bad Request sur les requêtes POST.
+app.use(cors());
+
 const io = socketIo(server, {
-  maxHttpBufferSize: 1e8,
   cors: {
-    origin: "*", // Autorise les connexions de n'importe quelle origine.
-    methods: ["GET", "POST"] // Autorise les méthodes GET et POST.
+    origin: "*", 
+    methods: ["GET", "POST"]
   }
 });
 // ========================================================================
@@ -32,7 +36,6 @@ const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
 const APP_VERSION = Date.now();
 const classDatabases = {};
 
-// Vérification au démarrage que les variables d'environnement sont bien présentes
 if (!MONGO_URL) {
     console.error("ERREUR CRITIQUE: La variable d'environnement MONGO_URL n'est pas définie !");
 }
@@ -45,10 +48,12 @@ const convertapi = new ConvertAPI(CONVERTAPI_SECRET);
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
 
-// Route pour servir le fichier principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
+
+// ... (TOUT LE RESTE DE VOTRE CODE RESTE IDENTIQUE) ...
+// ... (connectToClassDatabase, io.on('connection', ...), etc.) ...
 
 async function connectToClassDatabase(className) {
     if (classDatabases[className]) return classDatabases[className];
@@ -82,7 +87,6 @@ io.on('connection', (socket) => {
         let tempPdfPath = null;
         try {
             const timestamp = Date.now();
-            // Utiliser /tmp pour les fichiers temporaires sur Vercel
             tempDocxPath = path.join('/tmp', `docx-in-${timestamp}-${fileName}`);
             tempPdfPath = path.join('/tmp', `pdf-out-${timestamp}.pdf`);
             const nodeBuffer = Buffer.from(docxBuffer);
