@@ -1,0 +1,19 @@
+{
+  "name": "distribution-annuelle-v2",
+  "version": "1.0.0",
+  "description": "Application de gestion des tableaux par classe avec MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "convertapi": "^1.11.0",
+    "dotenv": "^8.6.0",
+    "express": "^4.17.1",
+    "mongodb": "^3.7.4",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": "16.x"
+  }
+}
