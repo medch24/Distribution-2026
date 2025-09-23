@@ -10,7 +10,6 @@ const app = express();
 
 const MONGO_URL = process.env.MONGO_URL;
 const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
-const APP_VERSION = Date.now();
 const classDatabases = {};
 
 if (!MONGO_URL) {
@@ -23,9 +22,10 @@ if (!CONVERTAPI_SECRET) {
 const convertapi = new ConvertAPI(CONVERTAPI_SECRET);
 
 // Middlewares
-app.use(cors()); // Active CORS pour toutes les routes
-app.use(express.json({ limit: '50mb' })); // Pour parser les corps de requêtes JSON (limite augmentée)
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+// Note : app.use(express.static) n'est plus nécessaire car Vercel gère les fichiers statiques séparément
+// grâce à la section "builds" dans vercel.json
 
 async function connectToClassDatabase(className) {
     if (classDatabases[className]) return classDatabases[className];
@@ -46,33 +46,27 @@ async function connectToClassDatabase(className) {
     }
 }
 
-// === ROUTES API (remplacent les événements socket.io) ===
+// === ROUTES API ===
 
 app.post('/api/generatePdfOnServer', async (req, res) => {
     const { docxBuffer, fileName } = req.body;
     if (!docxBuffer) {
         return res.status(400).json({ error: 'Données du document manquantes.' });
     }
-    console.log('Préparation de la conversion PDF...');
     let tempDocxPath = null;
     let tempPdfPath = null;
     try {
         const timestamp = Date.now();
-        const nodeBuffer = Buffer.from(docxBuffer, 'base64'); // Le buffer est envoyé en base64
+        const nodeBuffer = Buffer.from(docxBuffer, 'base64');
         
         tempDocxPath = path.join('/tmp', `docx-in-${timestamp}-${fileName}`);
         tempPdfPath = path.join('/tmp', `pdf-out-${timestamp}.pdf`);
         
         await fs.writeFile(tempDocxPath, nodeBuffer);
-        console.log(`Fichier DOCX temporaire créé à: ${tempDocxPath}`);
-
         const result = await convertapi.convert('pdf', { File: tempDocxPath }, 'docx');
-        
         await result.file.save(tempPdfPath);
-        console.log(`Fichier PDF temporaire créé à: ${tempPdfPath}`);
         
         const pdfBuffer = await fs.readFile(tempPdfPath);
-        console.log('Conversion PDF et lecture terminées avec succès.');
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=${fileName.replace('.docx', '.pdf')}`);
@@ -80,11 +74,7 @@ app.post('/api/generatePdfOnServer', async (req, res) => {
 
     } catch (error) {
         console.error('Erreur de ConvertAPI:', error.toString());
-        let errorMessage = 'Une erreur est survenue lors de la conversion du document.';
-        if (error.response && error.response.data && error.response.data.Message) {
-            errorMessage = error.response.data.Message;
-        }
-        res.status(500).json({ error: errorMessage });
+        res.status(500).json({ error: 'Une erreur est survenue lors de la conversion du document.' });
     } finally {
         if (tempDocxPath) await fs.unlink(tempDocxPath).catch(e => console.error("Erreur nettoyage DOCX:", e.message));
         if (tempPdfPath) await fs.unlink(tempPdfPath).catch(e => console.error("Erreur nettoyage PDF:", e.message));
@@ -186,11 +176,6 @@ app.post('/api/deleteMatiereData', async (req, res) => {
         console.error(`Erreur suppression ${sheetName}:`, error);
         res.status(500).json({ error: "Erreur serveur lors de la suppression." });
     }
-});
-
-// Route pour servir le fichier principal
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
 // Vercel démarre le serveur, donc on exporte l'instance.
