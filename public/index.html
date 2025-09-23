@@ -86,9 +86,35 @@
 </div>
 
 <script>
-    const socket = io();
-    socket.on('appVersion', (serverVersion) => { const localVersion = localStorage.getItem('appVersion'); if (localVersion && localVersion != serverVersion) { console.log('Nouvelle version du serveur détectée. Rafraîchissement automatique...'); location.reload(true); } localStorage.setItem('appVersion', serverVersion); });
-    let currentClass = null; let savedData = {};
+     async function apiRequest(endpoint, body) {
+        try {
+            const response = await fetch(`/api/${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                // Essayer de lire l'erreur JSON du serveur, sinon utiliser le statut
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                return { success: false, error: errorData.error || 'Erreur inconnue' };
+            }
+            return response.json(); // Le serveur doit répondre avec du JSON
+        } catch (error) {
+            console.error(`Erreur réseau pour ${endpoint}:`, error);
+            return { success: false, error: 'Erreur de connexion au serveur.' };
+        }
+    }
+    
+    // Vérification de la version pour le rafraîchissement (désactivé pour l'instant)
+    fetch('/api/appVersion').then(res => res.json()).then(data => {
+        const serverVersion = data.version;
+        const localVersion = localStorage.getItem('appVersion');
+        if (localVersion && localVersion != serverVersion) {
+            console.log('Nouvelle version du serveur détectée. Le rechargement est désactivé.');
+            // location.reload(true); // Désactivé pour éviter les boucles
+        }
+        localStorage.setItem('appVersion', serverVersion);
+    });
     const standardHeaders = ["Mois", "Semaine", "Date", "Jour", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"];
     const monthAbbreviations = { 'Janvier': 'Janv.', 'Février': 'Févr.', 'Mars': 'Mars', 'Avril': 'Avr.', 'Mai': 'Mai', 'Juin': 'Juin', 'Juillet': 'Juil.', 'Août': 'Août', 'Septembre': 'Sept.', 'Octobre': 'Oct.', 'Novembre': 'Nov.', 'Décembre': 'Déc.' }; 
     const classSubjects = { 'TPS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'MS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'GS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP1': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP2': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP3': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP4': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences humaines', 'Sciences naturelles', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PP5': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI1': ['Langue et littérature', 'Maths', 'Sciences', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI2': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI3': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI4': ['Maths', 'Biologie', 'Langue et littérature', 'Anglais', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'],'PEI5': ['Maths', 'Biologie', 'Individus et Sociétés', 'Langue et littérature', 'Physique-chimie', 'Anglais', 'Sciences Économiques et Sociales', 'Sciences numeriques et Technologies', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'],'DP1': ['Biologie', 'Maths', 'Individus et Sociétés', 'Anglais', 'Langue et littérature', 'Physique-chimie', 'Sciences Économiques', 'Éducation physique', 'ART', 'Bibliothèque', 'Enseignement Scientifique'],'DP2': ['Langue et littérature', 'Maths', 'Biologie', 'Individus et Sociétés', 'Physique-chimie', 'Anglais', 'Histoire', 'Éducation physique', 'ART', 'Bibliothèque', 'Enseignement Scientifique'] }; 
