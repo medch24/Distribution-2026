@@ -1,19 +1,26 @@
 {
-  "name": "distribution-annuelle-v2",
-  "version": "1.0.0",
-  "description": "Application de gestion des tableaux par classe avec MongoDB",
-  "main": "api/server.js",
-  "scripts": {
-    "start": "node api/server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "convertapi": "^1.15.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "mongodb": "^6.5.0"
-  },
-  "engines": {
-    "node": "18.x"
-  }
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/server.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
