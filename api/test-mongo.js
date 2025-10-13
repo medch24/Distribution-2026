@@ -2,7 +2,7 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Configuration CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');

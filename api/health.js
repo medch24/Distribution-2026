@@ -1,7 +1,7 @@
 // API endpoint pour diagnostic de santé
 require('dotenv').config();
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
     // Configuration CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
