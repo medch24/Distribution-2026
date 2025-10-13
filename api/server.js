@@ -32,9 +32,10 @@ function validateEnvironmentVariables() {
         console.error("🚨 ERREURS DE CONFIGURATION:");
         errors.forEach(error => console.error(`   - ${error}`));
         console.error("📋 SOLUTIONS:");
-        console.error("   1. Vérifiez les variables d'environnement Vercel");
-        console.error("   2. Pour MongoDB: utilisez MongoDB Atlas");
-        console.error("   3. Pour ConvertAPI: inscrivez-vous sur convertapi.com");
+        console.error("   1. Créez un fichier .env avec les bonnes valeurs");
+        console.error("   2. Ou définissez les variables d'environnement système");
+        console.error("   3. Pour MongoDB: utilisez MongoDB Atlas ou une instance locale");
+        console.error("   4. Pour ConvertAPI: inscrivez-vous sur convertapi.com pour obtenir une clé");
     }
     
     return errors.length === 0;
@@ -62,65 +63,27 @@ app.use(express.json({ limit: '50mb' }));
 // Note : app.use(express.static) n'est plus nécessaire car Vercel gère les fichiers statiques séparément
 // grâce à la section "builds" dans vercel.json
 
-// Cache de connexions pour éviter les reconnexions multiples
-const mongoClients = {};
-
 async function connectToClassDatabase(className) {
-    if (classDatabases[className]) {
-        console.log(`✅ Utilisation de la connexion existante pour ${className}`);
-        return classDatabases[className];
-    }
-    
+    if (classDatabases[className]) return classDatabases[className];
     if (!MONGO_URL) {
-        console.error("❌ MONGO_URL n'est pas défini. Impossible de se connecter.");
+        console.error("MONGO_URL n'est pas défini. Impossible de se connecter.");
         return null;
     }
-    
     try {
-        console.log(`🔄 Connexion à MongoDB pour la classe ${className}...`);
-        
-        // Options de connexion améliorées pour Vercel/production
-        const options = {
-            useNewUrlParser: true,
+        const client = await MongoClient.connect(MONGO_URL, { 
+            useNewUrlParser: true, 
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000, // 5 secondes timeout
-            socketTimeoutMS: 45000, // 45 secondes pour les opérations
-            family: 4, // Forcer IPv4
-            maxPoolSize: 10, // Limite de connexions
-            retryWrites: true
-        };
-        
-        const client = await MongoClient.connect(MONGO_URL, options);
-        
-        // Test de la connexion
-        await client.db('admin').command({ ping: 1 });
-        
-        const dbName = `Distribution_${className.replace(/[^a-zA-Z0-9]/g, '_')}`;
-        const db = client.db(dbName);
-        
-        // Cache les connexions
-        mongoClients[className] = client;
-        classDatabases[className] = db;
-        
-        console.log(`✅ Connecté à la base de données ${dbName} pour la classe ${className}`);
-        return db;
-        
-    } catch (error) {
-        console.error(`❌ Erreur de connexion MongoDB pour ${className}:`, {
-            message: error.message,
-            code: error.code,
-            codeName: error.codeName
+            serverSelectionTimeoutMS: 10000, // 10 secondes timeout
+            connectTimeoutMS: 10000,
+            maxPoolSize: 10
         });
-        
-        // Log spécifique selon le type d'erreur
-        if (error.message.includes('ENOTFOUND')) {
-            console.error('💡 Vérifiez que MONGO_URL est correcte et que le réseau est accessible');
-        } else if (error.message.includes('Authentication failed')) {
-            console.error('💡 Vérifiez les credentials MongoDB (username/password)');
-        } else if (error.message.includes('timeout')) {
-            console.error('💡 Timeout de connexion - vérifiez la connectivité réseau');
-        }
-        
+        const dbName = `Classe_${className.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const db = client.db(dbName);
+        classDatabases[className] = db;
+        console.log(`Connecté à la base de données ${dbName}`);
+        return db;
+    } catch (error) {
+        console.error(`Erreur de connexion à la base de données pour la classe ${className}:`, error);
         return null;
     }
 }
@@ -184,6 +147,7 @@ app.post('/generatePdfOnServer', async (req, res) => {
             error: 'Service de conversion PDF non disponible. Veuillez configurer CONVERTAPI_SECRET dans les variables d\'environnement.'
         });
     }
+
     const { docxBuffer, fileName } = req.body;
     if (!docxBuffer) {
         return res.status(400).json({ error: 'Données du document manquantes.' });
@@ -191,8 +155,10 @@ app.post('/generatePdfOnServer', async (req, res) => {
     if (!fileName) {
         return res.status(400).json({ error: 'Nom de fichier manquant.' });
     }
+    
     let tempDocxPath = null;
     let tempPdfPath = null;
+    
     try {
         const timestamp = Date.now();
         const nodeBuffer = Buffer.from(docxBuffer, 'base64');
@@ -245,13 +211,7 @@ app.post('/saveTable', async (req, res) => {
     if (!className || !sheetName || !data) return res.status(400).json({ error: "Missing data." });
     try {
         const db = await connectToClassDatabase(className);
-        if (!db) {
-            console.error(`Impossible de se connecter à la DB pour la classe ${className}`);
-            return res.status(500).json({ 
-                error: `Impossible de se connecter à la base de données pour la classe ${className}. Vérifiez MONGO_URL.`,
-                details: "Connexion MongoDB échouée"
-            });
-        }
+        if (!db) return res.status(500).json({ error: `Cannot connect to DB for ${className}` });
         
         await db.collection('tables').updateOne({ sheetName }, { $set: { data } }, { upsert: true });
         
@@ -261,11 +221,8 @@ app.post('/saveTable', async (req, res) => {
         
         res.json({ success: true });
     } catch (error) {
-        console.error(`Erreur lors de la sauvegarde pour ${className}:`, error);
-        res.status(500).json({ 
-            error: "Erreur lors de la sauvegarde des données",
-            details: error.message
-        });
+        console.error("Error saving table:", error);
+        res.status(500).json({ error: "Error saving table" });
     }
 });
 
@@ -274,13 +231,7 @@ app.post('/loadLatestCopy', async (req, res) => {
     if (!className) return res.status(400).json({ error: "Class name is required." });
     try {
         const db = await connectToClassDatabase(className);
-        if (!db) {
-            console.error(`Impossible de se connecter à la DB pour la classe ${className}`);
-            return res.status(500).json({ 
-                error: `Impossible de se connecter à la base de données pour la classe ${className}. Vérifiez MONGO_URL.`,
-                details: "Connexion MongoDB échouée"
-            });
-        }
+        if (!db) return res.status(500).json({ error: `Cannot connect to DB for ${className}` });
         
         const latestCopy = await db.collection('savedCopies').find({ 'tables.0': { '$exists': true } }).sort({ timestamp: -1 }).limit(1).toArray();
         
@@ -292,12 +243,8 @@ app.post('/loadLatestCopy', async (req, res) => {
             res.json({ success: true, tables: formattedTables.length > 0 ? formattedTables : [] });
         }
     } catch (error) {
-        console.error(`Erreur lors du chargement des données pour ${className}:`, error);
-        res.status(500).json({ 
-            success: false, 
-            error: "Erreur lors du chargement des données sauvegardées",
-            details: error.message
-        });
+        console.error("Error loading latest copy:", error);
+        res.status(500).json({ success: false, error: "Error loading saved data" });
     }
 });
 

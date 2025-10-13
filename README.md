@@ -10,172 +10,200 @@ Application web pour la gestion des distributions annuelles par classe et matiè
 - **Sauvegarde automatique** : Persistance des données dans MongoDB
 - **Interface intuitive** : Navigation simple et ergonomique
 - **Calendrier académique** : Intégration du calendrier scolaire 2025-2026
-- **Diagnostic intégré** : Bouton de diagnostic pour vérifier l'état du système
 
-## 🔧 Configuration Vercel
+## 🔧 Configuration requise
 
-### Variables d'environnement requises
+### Variables d'environnement
 
-Dans le dashboard Vercel → Settings → Environment Variables :
+Créez un fichier `.env` avec les variables suivantes :
 
 ```env
 # Base de données MongoDB (OBLIGATOIRE)
-MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/distribution-annuelle
+MONGO_URL=mongodb://username:password@host:port/database
+# Ou pour MongoDB Atlas:
+# MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/database
 
-# Clé API ConvertAPI pour PDF (OPTIONNEL)
+# Clé API ConvertAPI pour la conversion PDF (OBLIGATOIRE pour PDF)
 CONVERTAPI_SECRET=your_convertapi_secret_here
+
+# Port du serveur (optionnel, par défaut 3000)
+PORT=3000
 ```
 
-### Services externes
+### Services externes requis
 
-1. **MongoDB Atlas** (OBLIGATOIRE) :
-   - Inscription gratuite : https://www.mongodb.com/atlas
-   - Créez un cluster gratuit (500MB)
-   - Obtenez l'URL de connexion
-   - Autorisez l'IP 0.0.0.0/0 dans Network Access
+1. **MongoDB** : Base de données pour stocker les distributions
+   - MongoDB Atlas (recommandé) : https://www.mongodb.com/atlas
+   - Ou installation locale de MongoDB
 
-2. **ConvertAPI** (OPTIONNEL pour PDF) :
+2. **ConvertAPI** : Service de conversion DOCX vers PDF
    - Inscription : https://www.convertapi.com/
-   - Plan gratuit : 500 conversions/mois
-   - Obtenez votre clé secrète
+   - Plan gratuit disponible (500 conversions/mois)
 
-## 🛠️ Utilisation
+## 📦 Installation
 
-### Interface principale
+1. **Cloner le projet**
+```bash
+git clone <repository-url>
+cd distribution-annuelle-v2
+```
 
-1. **Accédez à l'application** sur votre URL Vercel
-2. **Diagnostic système** : Cliquez "🔍 Diagnostic Système" pour vérifier la configuration
-3. **Sélectionnez une section** : Maternelle, Primaire ou Secondaire
-4. **Choisissez une classe** : Selon la section sélectionnée
-5. **Sélectionnez une matière** : Dans la liste des matières disponibles
+2. **Installer les dépendances**
+```bash
+npm install
+```
 
-### Gestion des données
+3. **Configurer les variables d'environnement**
+```bash
+cp .env.example .env
+# Puis éditez le fichier .env avec vos vraies valeurs
+```
 
-- **Saisie** : Remplissez les tableaux interactifs
-- **Sauvegarde** : Cliquez "Enregistrer les modifications" (sauvegarde automatique en BD)
-- **Import Excel** : Importez des données existantes depuis Excel
-- **Export** : Générez Excel, Word ou PDF par matière ou par classe complète
+4. **Démarrer le serveur**
+```bash
+# Développement
+npm run dev
 
-### Diagnostic intégré
+# Production
+npm start
+```
 
-Le bouton "🔍 Diagnostic Système" vérifie :
-- ✅ État de l'application
-- ✅ Configuration MongoDB
-- ✅ Configuration ConvertAPI
-- ✅ Connectivité des services
-- ✅ Recommandations de correction
+## 🎯 Utilisation
 
-## 🔍 Résolution des problèmes
+1. **Accéder à l'application** : http://localhost:3000
+2. **Sélectionner une section** : Maternelle, Primaire ou Secondaire
+3. **Choisir une classe** : Selon la section sélectionnée
+4. **Sélectionner une matière** : Dans la liste des matières disponibles
+5. **Remplir le tableau** : Saisir les contenus de cours
+6. **Sauvegarder** : Enregistrer les modifications
+7. **Exporter** : Générer Excel, Word ou PDF
 
-### Erreur 404 au démarrage
+## 🔍 Diagnostic des problèmes
 
-**Cause** : Configuration Vercel incorrecte
-**Solution** :
-1. Vérifiez que `vercel.json` pointe vers `/public/index.html`
-2. Redéployez avec `vercel --prod`
+### Routes de diagnostic disponibles
 
-### Erreur MongoDB
+- **Health Check** : `GET /api/health`
+  - Vérification de l'état général de l'application
+  - Validation de la configuration
 
-**Symptômes** : "Cannot connect to DB"
+- **Test MongoDB** : `GET /api/test-mongo`
+  - Test de connectivité à la base de données
+
+### Erreurs courantes
+
+#### ❌ MongoDB non connecté
+```
+Erreur: "Cannot connect to MongoDB"
+```
 **Solutions** :
-1. Vérifiez MONGO_URL dans les variables Vercel
-2. Testez avec le diagnostic système
-3. Vérifiez l'IP whitelist dans MongoDB Atlas (0.0.0.0/0)
-4. Vérifiez les credentials MongoDB
+- Vérifiez que MONGO_URL est correctement configurée
+- Testez la connexion avec `/api/test-mongo`
+- Vérifiez les credentials et les permissions réseau
 
-### Erreur ConvertAPI
-
-**Symptômes** : "Service de conversion PDF non disponible"
+#### ❌ ConvertAPI non configuré
+```
+Erreur: "Service de conversion PDF non disponible"
+```
 **Solutions** :
-1. ConvertAPI est optionnel (Excel/Word fonctionnent sans)
-2. Configurez CONVERTAPI_SECRET si vous voulez le PDF
-3. Vérifiez votre quota sur convertapi.com
+- Configurez CONVERTAPI_SECRET dans le fichier .env
+- Vérifiez votre quota sur convertapi.com
+- La génération Word reste disponible
 
-### Données non sauvegardées
+#### ❌ Port déjà utilisé
+```
+Erreur: "EADDRINUSE: address already in use"
+```
+**Solutions** :
+```bash
+# Tuer le processus sur le port 3000
+npx kill-port 3000
+# Ou changer le port dans .env
+echo "PORT=3001" >> .env
+```
 
-**Causes possibles** :
-1. MongoDB non connecté
-2. Erreur réseau
-3. Variables d'environnement manquantes
-
-**Diagnostic** :
-1. Utilisez le bouton "🔍 Diagnostic Système"
-2. Vérifiez la console navigateur (F12)
-3. Vérifiez les logs Vercel
-
-## 📊 Structure des données
+## 📊 Structure du projet
 
 ```
-MongoDB → Bases par classe
-├── Distribution_TPS/
-├── Distribution_PS/
-├── Distribution_PP1/
-└── ...
-
-Chaque base contient :
-├── tables (données par matière)
-├── savedCopies (historique)
-└── selections (sélections utilisateur)
+distribution-annuelle-v2/
+├── api/                    # API backend
+│   └── server.js          # Serveur Express + routes API
+├── public/                # Frontend
+│   └── index.html         # Application single-page
+├── .env                   # Variables d'environnement
+├── .env.example           # Modèle de configuration
+├── package.json           # Dépendances npm
+├── start.js              # Serveur de développement
+├── vercel.json           # Configuration Vercel
+└── README.md             # Ce fichier
 ```
 
 ## 🚀 Déploiement
 
-### Automatique via GitHub
+### Déploiement sur Vercel
 
-1. Connectez votre repository à Vercel
-2. Configurez les variables d'environnement
-3. Déployez automatiquement à chaque push
-
-### Manuel
-
+1. **Installer Vercel CLI**
 ```bash
-# Installation Vercel CLI
 npm i -g vercel
+```
 
-# Déploiement
+2. **Connecter le projet**
+```bash
+vercel
+```
+
+3. **Configurer les variables d'environnement sur Vercel**
+- Aller dans le dashboard Vercel
+- Projet > Settings > Environment Variables
+- Ajouter MONGO_URL et CONVERTAPI_SECRET
+
+4. **Déployer**
+```bash
 vercel --prod
 ```
 
+### Déploiement sur d'autres plateformes
+
+L'application est compatible avec :
+- Vercel (recommandé)
+- Netlify Functions
+- Heroku
+- Railway
+- Render
+
+## 🛠️ Développement
+
+### Scripts disponibles
+
+```bash
+# Développement avec rechargement automatique
+npm run dev
+
+# Démarrage production
+npm start
+
+# Nettoyage des dépendances
+npm run clean
+
+# Test de l'API
+npm run test-api
+```
+
+### Structure des données
+
+Les données sont organisées par :
+- **Classe** : Base de données séparée par classe
+- **Matière** : Collection par matière dans chaque classe
+- **Séances** : Lignes individuelles avec contenu de cours
+
 ## 📞 Support
 
-### Routes de diagnostic
+En cas de problème :
 
-- **Health Check** : `https://your-app.vercel.app/api/health`
-- **Test MongoDB** : `https://your-app.vercel.app/api/test-mongo`
-
-### En cas de problème
-
-1. **Utilisez le diagnostic intégré** dans l'interface
-2. **Consultez les logs Vercel** dans le dashboard
-3. **Vérifiez la console navigateur** (F12 → Console)
-4. **Testez les routes API** directement
-
-## 📋 Checklist de déploiement
-
-- [ ] Repository connecté à Vercel
-- [ ] Variables d'environnement configurées :
-  - [ ] `MONGO_URL` (obligatoire)
-  - [ ] `CONVERTAPI_SECRET` (optionnel)
-- [ ] MongoDB Atlas configuré :
-  - [ ] Cluster créé
-  - [ ] Utilisateur avec permissions
-  - [ ] IP whitelist : 0.0.0.0/0
-- [ ] Test de l'application :
-  - [ ] Page d'accueil accessible
-  - [ ] Diagnostic système OK
-  - [ ] Sauvegarde des données fonctionnelle
-
-## ✅ Statut de l'application
-
-Cette application est **entièrement fonctionnelle** avec :
-- ✅ Interface responsive
-- ✅ Sauvegarde MongoDB
-- ✅ Export Excel/Word
-- ✅ Import Excel
-- ✅ Diagnostic automatique
-- ✅ Gestion d'erreurs robuste
-- ⚠️ Export PDF (nécessite ConvertAPI)
+1. **Vérifiez les logs** : Console du navigateur et terminal serveur
+2. **Testez la configuration** : Routes `/api/health` et `/api/test-mongo`  
+3. **Vérifiez les variables d'environnement** : Fichier `.env`
+4. **Consultez la documentation** : Services MongoDB et ConvertAPI
 
 ## 📜 Licence
 
-MIT License - Voir LICENSE pour les détails.
+Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
