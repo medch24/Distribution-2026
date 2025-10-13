@@ -70,7 +70,13 @@ async function connectToClassDatabase(className) {
         return null;
     }
     try {
-        const client = await MongoClient.connect(MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+        const client = await MongoClient.connect(MONGO_URL, { 
+            useNewUrlParser: true, 
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000, // 10 secondes timeout
+            connectTimeoutMS: 10000,
+            maxPoolSize: 10
+        });
         const dbName = `Classe_${className.replace(/[^a-zA-Z0-9]/g, '_')}`;
         const db = client.db(dbName);
         classDatabases[className] = db;
