@@ -19,7 +19,7 @@ if (CONVERTAPI_SECRET && CONVERTAPI_SECRET !== 'your_convertapi_secret_here') {
     console.warn("⚠️  ConvertAPI non initialisé - les conversions PDF seront désactivées");
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Configuration CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
