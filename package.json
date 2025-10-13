@@ -17,7 +17,7 @@
     "mongodb": "^6.5.0"
   },
   "engines": {
-    "node": ">=18.x"
+    "node": ">=18.0.0"
   },
   "keywords": ["education", "planning", "distribution", "scolaire", "mongodb", "express"],
   "author": "Distribution Annuelle Team",
