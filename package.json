@@ -1,6 +1,14 @@
 {
   "name": "distribution-annuelle-v2",
   "version": "1.0.0",
+  "description": "Application web pour la gestion des distributions annuelles par classe et matière",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node start.js",
+    "test-api": "curl http://localhost:3000/api/health",
+    "clean": "rm -rf node_modules package-lock.json && npm install"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "convertapi": "^1.15.0",
@@ -9,6 +17,9 @@
     "mongodb": "^6.5.0"
   },
   "engines": {
-    "node": "18.x"
-  }
+    "node": ">=18.0.0"
+  },
+  "keywords": ["education", "planning", "distribution", "scolaire", "mongodb", "express"],
+  "author": "Distribution Annuelle Team",
+  "license": "MIT"
 }
