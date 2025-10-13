@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Routes API en premier (avant les fichiers statiques)
+// Note: Les routes dans api/server.js n'ont PAS de préfixe /api/
 app.use('/api', apiApp);
 
 // Configuration pour servir les fichiers statiques
