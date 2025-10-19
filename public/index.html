@@ -386,63 +386,96 @@
         table.appendChild(thead);
         const tbody = document.createElement('tbody');
         let sessionCounters = {};
+        let daySessionCounters = {};
         const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][sheetName]) || 5;
+        
         jsonData.slice(1).forEach((row, dataIndex) => {
             const event = academicCalendar[dataIndex];
             if (!event) return;
             const weekValue = event.week;
+            const dayKey = `${weekValue}_${dataIndex}`;
+            
             if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0;
+            if(!daySessionCounters[dayKey]) daySessionCounters[dayKey] = 0;
             
             const isSpecialEvent = !isPlannable(event);
             
             if (!isSpecialEvent) {
+                const sessionsThisDay = Math.ceil((sessionsPerWeek - sessionCounters[weekValue]) / 
+                    (jsonData.slice(dataIndex + 1).filter((r, i) => {
+                        const e = academicCalendar[dataIndex + 1 + i];
+                        return e && e.week === weekValue && isPlannable(e);
+                    }).length + 1));
+                
+                const maxSessionsThisDay = Math.max(1, Math.min(sessionsThisDay, sessionsPerWeek - sessionCounters[weekValue]));
+                
                 if (sessionCounters[weekValue] >= sessionsPerWeek) { return; }
-                sessionCounters[weekValue]++;
             }
 
-            const rowElement = document.createElement('tr');
-            const originalRowIndex = savedData[sheetName].findIndex(originalRow => originalRow === row);
-            const rowIndexForDB = originalRowIndex !== -1 ? originalRowIndex - 1 : -1;
-            
-            const monthTd = document.createElement('td');
-            monthTd.textContent = monthAbbreviations[row[0]] || row[0] || '';
-            rowElement.appendChild(monthTd);
+            const renderSession = (sessionNum) => {
+                const rowElement = document.createElement('tr');
+                const originalRowIndex = savedData[sheetName].findIndex(originalRow => originalRow === row);
+                const rowIndexForDB = originalRowIndex !== -1 ? originalRowIndex - 1 : -1;
+                
+                const monthTd = document.createElement('td');
+                monthTd.textContent = monthAbbreviations[row[0]] || row[0] || '';
+                rowElement.appendChild(monthTd);
 
-            const weekTd = document.createElement('td');
-            weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : '';
-            rowElement.appendChild(weekTd);
+                const weekTd = document.createElement('td');
+                weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : '';
+                rowElement.appendChild(weekTd);
 
-            const seanceTd = document.createElement('td');
-            if (!isSpecialEvent) { seanceTd.textContent = sessionCounters[weekValue]; }
-            rowElement.appendChild(seanceTd);
-            
+                const seanceTd = document.createElement('td');
+                if (!isSpecialEvent) { seanceTd.textContent = sessionNum; }
+                rowElement.appendChild(seanceTd);
+                
+                if (isSpecialEvent) {
+                    const mergedCell = document.createElement('td');
+                    mergedCell.colSpan = displayedHeaders.length - 3;
+                    mergedCell.innerHTML = `<b>${event.type}</b>`;
+                    mergedCell.classList.add('merged-cell');
+                    let bgColor = '#f2f2f2';
+                    if (event.type.includes('Vacances')) bgColor = '#90EE90';
+                    else if (event.type.includes('Examen')) bgColor = '#FFA07A';
+                    else if (event.type.includes('day')) bgColor = '#ADD8E6';
+                    else if (event.type.includes('Orientation')) bgColor = '#FFD700';
+                    else if (event.type.includes('weekend')) bgColor = '#D3D3D3';
+                    mergedCell.style.backgroundColor = bgColor;
+                    rowElement.appendChild(mergedCell);
+                } else {
+                    for (let i = 4; i < standardHeaders.length; i++) {
+                        const td = document.createElement('td');
+                        const input = document.createElement('textarea');
+                        input.value = row[i] || '';
+                        input.className = 'modifiable-input';
+                        input.dataset.rowIndex = rowIndexForDB;
+                        input.dataset.colIndex = i;
+                        td.appendChild(input);
+                        rowElement.appendChild(td);
+                    }
+                }
+                tbody.appendChild(rowElement);
+            };
+
             if (isSpecialEvent) {
-                const mergedCell = document.createElement('td');
-                mergedCell.colSpan = displayedHeaders.length - 3;
-                mergedCell.innerHTML = `<b>${event.type}</b>`;
-                mergedCell.classList.add('merged-cell');
-                let bgColor = '#f2f2f2';
-                if (event.type.includes('Vacances')) bgColor = '#90EE90';
-                else if (event.type.includes('Examen')) bgColor = '#FFA07A';
-                else if (event.type.includes('day')) bgColor = '#ADD8E6';
-                else if (event.type.includes('Orientation')) bgColor = '#FFD700';
-                else if (event.type.includes('weekend')) bgColor = '#D3D3D3';
-                mergedCell.style.backgroundColor = bgColor;
-                rowElement.appendChild(mergedCell);
+                renderSession(null);
             } else {
-                for (let i = 4; i < standardHeaders.length; i++) {
-                    const td = document.createElement('td');
-                    const input = document.createElement('textarea');
-                    input.value = row[i] || '';
-                    input.className = 'modifiable-input';
-                    input.dataset.rowIndex = rowIndexForDB;
-                    input.dataset.colIndex = i;
-                    td.appendChild(input);
-                    rowElement.appendChild(td);
+                const remainingSessions = sessionsPerWeek - sessionCounters[weekValue];
+                const remainingDays = jsonData.slice(dataIndex).filter((r, i) => {
+                    const e = academicCalendar[dataIndex + i];
+                    return e && e.week === weekValue && isPlannable(e);
+                }).length;
+                
+                const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
+                const actualSessions = Math.min(sessionsThisDay, remainingSessions);
+                
+                for (let s = 0; s < actualSessions; s++) {
+                    sessionCounters[weekValue]++;
+                    renderSession(sessionCounters[weekValue]);
                 }
             }
-            tbody.appendChild(rowElement);
         });
+        
         table.appendChild(tbody);
         output.appendChild(table);
         addEventListenersToTable(sheetName);
