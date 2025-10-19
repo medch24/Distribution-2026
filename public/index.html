@@ -96,6 +96,19 @@
 
     const isPlannable = (event) => event && !event.isFixed && (event.type === 'Cours Normal' || event.type.toLowerCase().includes('revision') || event.type.toLowerCase().includes('révision'));
 
+    const isSpecialDay = (event) => {
+        if (!event) return false;
+        const type = event.type.toLowerCase();
+        return type.includes('day') || 
+               type.includes('examen') || 
+               type.includes('fête') || 
+               type.includes('férié') || 
+               type.includes('congé') ||
+               type.includes('weekend') ||
+               type.includes('evaluation');
+    };
+
+
     // === GESTION AMÉLIORÉE DES ERREURS ===
     
     function showErrorMessage(message, duration = 5000) {
@@ -395,6 +408,101 @@
             const weekValue = event.week;
             
             if(!weekMaxSessions[weekValue]) {
+                const specialDays = jsonData.slice(1).filter((r, i) => {
+                    const e = academicCalendar[i];
+                    return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e);
+                }).length;
+                
+                weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays);
+            }
+            
+            if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0;
+            
+            const isSpecialEvent = !isPlannable(event);
+            const sessionsPerWeek = weekMaxSessions[weekValue];
+
+            const renderSession = (sessionNum) => {
+                const rowElement = document.createElement('tr');
+                const originalRowIndex = savedData[sheetName].findIndex(originalRow => originalRow === row);
+                const rowIndexForDB = originalRowIndex !== -1 ? originalRowIndex - 1 : -1;
+                
+                const monthTd = document.createElement('td');
+                monthTd.textContent = monthAbbreviations[row[0]] || row[0] || '';
+                rowElement.appendChild(monthTd);
+
+                const weekTd = document.createElement('td');
+                weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : '';
+                rowElement.appendChild(weekTd);
+
+                const seanceTd = document.createElement('td');
+                if (!isSpecialEvent) { seanceTd.textContent = sessionNum; }
+                rowElement.appendChild(seanceTd);
+                
+                if (isSpecialEvent) {
+                    const mergedCell = document.createElement('td');
+                    mergedCell.colSpan = displayedHeaders.length - 3;
+                    mergedCell.innerHTML = `<b>${event.type}</b>`;
+                    mergedCell.classList.add('merged-cell');
+                    let bgColor = '#f2f2f2';
+                    if (event.type.includes('Vacances')) bgColor = '#90EE90';
+                    else if (event.type.includes('Examen')) bgColor = '#FFA07A';
+                    else if (event.type.includes('day')) bgColor = '#ADD8E6';
+                    else if (event.type.includes('Orientation')) bgColor = '#FFD700';
+                    else if (event.type.includes('weekend')) bgColor = '#D3D3D3';
+                    mergedCell.style.backgroundColor = bgColor;
+                    rowElement.appendChild(mergedCell);
+                } else {
+                    for (let i = 4; i < standardHeaders.length; i++) {
+                        const td = document.createElement('td');
+                        const input = document.createElement('textarea');
+                        input.value = row[i] || '';
+                        input.className = 'modifiable-input';
+                        input.dataset.rowIndex = rowIndexForDB;
+                        input.dataset.colIndex = i;
+                        td.appendChild(input);
+                        rowElement.appendChild(td);
+                    }
+                }
+                tbody.appendChild(rowElement);
+            };
+
+            if (isSpecialEvent) {
+                renderSession(null);
+            } else {
+                const remainingSessions = sessionsPerWeek - sessionCounters[weekValue];
+                const remainingDays = jsonData.slice(dataIndex).filter((r, i) => {
+                    const e = academicCalendar[dataIndex + i];
+                    return e && e.week === weekValue && isPlannable(e);
+                }).length;
+                
+                const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
+                const actualSessions = Math.min(sessionsThisDay, remainingSessions);
+                
+                for (let s = 0; s < actualSessions; s++) {
+                    sessionCounters[weekValue]++;
+                    renderSession(sessionCounters[weekValue]);
+                }
+            }
+        });
+        
+        table.appendChild(tbody);
+        output.appendChild(table);
+        addEventListenersToTable(sheetName);
+        applyFilter();
+    });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        let sessionCounters = {};
+        let weekMaxSessions = {};
+        const baseSessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][sheetName]) || 5;
+        
+        jsonData.slice(1).forEach((row, dataIndex) => {
+            const event = academicCalendar[dataIndex];
+            if (!event) return;
+            const weekValue = event.week;
+            
+            if(!weekMaxSessions[weekValue]) {
                 const daysInWeek = jsonData.slice(1).filter((r, i) => {
                     const e = academicCalendar[i];
                     return e && e.week === weekValue;
@@ -513,57 +621,187 @@
     function fillTableWithExcelData(importedData) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez d'abord sélectionner une classe et une matière."); return; } const headerOffset = importedData[0]?.[0]?.toLowerCase().includes('unité') || importedData[0]?.[1]?.toLowerCase().includes('contenu') ? 1 : 0; const dataToImport = importedData.slice(headerOffset); const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 0; const availableSlots = []; let sessionCounters = {}; savedData[selectedMatiere].slice(1).forEach((appRow, appRowIndex) => { const event = academicCalendar[appRowIndex]; const weekValue = event.week; if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; if (isPlannable(event)) { if (sessionCounters[weekValue] < sessionsPerWeek) { availableSlots.push(appRow); } sessionCounters[weekValue]++; } }); dataToImport.forEach((importedRow, importIndex) => { if (importIndex < availableSlots.length) { const targetRow = availableSlots[importIndex]; for(let i = 0; i < 7; i++) { targetRow[i + 4] = importedRow[i] || ''; } } }); renderTable(selectedMatiere, savedData[selectedMatiere]); saveTable(true); alert('Importation terminée ! Les données ont été insérées uniquement dans les séances prévues pour cette matière.'); }
     function generateExcel() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière."); return; } const dataForExport = prepareExcelDataForSubject(selectedMatiere); if (!dataForExport) { alert("Pas de données à exporter."); return; } const worksheet = XLSX.utils.aoa_to_sheet(dataForExport); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, selectedMatiere); const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }); saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), `${currentClass}_${selectedMatiere}_Distribution.xlsx`); }
     async function generateExcelZipForClass() { if (!currentClass) { alert("Veuillez d'abord sélectionner une classe."); return; } if (Object.keys(savedData).length === 0) { alert("Les données de la classe ne sont pas encore chargées. Veuillez patienter ou recharger."); return; } showProgressBar(); try { const zip = new JSZip(); const subjects = classSubjects[currentClass]; if (!subjects || subjects.length === 0) { throw new Error("Aucune matière n'est définie pour cette classe."); } for (const subject of subjects) { const dataForExport = prepareExcelDataForSubject(subject); if (dataForExport) { const worksheet = XLSX.utils.aoa_to_sheet(dataForExport); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, subject); const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }); zip.file(`${currentClass}_${subject}_Distribution.xlsx`, excelBuffer); } } if (Object.keys(zip.files).length > 0) { const content = await zip.generateAsync({ type: "blob" }); saveAs(content, `Distribution_Excel_${currentClass}.zip`); } else { alert("Aucun document Excel n'a pu être généré. Vérifiez que les matières contiennent des données."); } } catch (error) { console.error('Erreur lors de la génération du ZIP de fichiers Excel:', error); alert('Une erreur est survenue : ' + error.message); } finally { hideProgressBar(); } }
-    function prepareExcelDataForSubject(subjectName) { const sheetData = savedData[subjectName]; if (!sheetData || sheetData.length <=1) { return null; } const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][subjectName]) || 0; sheetData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; let seanceValue = ''; if (isPlannable(event)) { if(sessionCounters[weekValue] < sessionsPerWeek) { sessionCounters[weekValue]++; seanceValue = sessionCounters[weekValue]; } else { return; } } if (!isPlannable(event)) { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', '', event.type, '', '', '', '', '', '' ]); } else { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', seanceValue, row[4] || '', row[5] || '', row[6] || '', row[7] || '', row[8] || '', row[9] || '', row[10] || '' ]); } }); return dataForExport; }
-    function prepareWordDataForSubject(subjectName, subjectData, className) { const data = subjectData.slice(1); const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août'); const dataByMonth = {}; dataForWord.forEach((row, index) => { const originalIndex = data.findIndex(d => d === row); const event = academicCalendar[originalIndex]; if (!event) return; const month = event.month; const week = event.week; if (!dataByMonth[month]) { dataByMonth[month] = { month_name: month, weeks: {} }; } if (!dataByMonth[month].weeks[week]) { dataByMonth[month].weeks[week] = { week_name: week.replace('Semaine ', 'S'), seances: [] }; } }); let sessionCounters = {}; const sessionsPerWeek = (classSessionCounts[className] && classSessionCounts[className][subjectName]) || 0; dataForWord.forEach((row, index) => { const originalIndex = data.findIndex(d => d === row); const event = academicCalendar[originalIndex]; if (!event) return; const month = event.month; const week = event.week; if (!sessionCounters[week]) sessionCounters[week] = 0; const isSpecialEvent = !isPlannable(event); if (!isSpecialEvent) { if (sessionCounters[week] < sessionsPerWeek) { const seanceData = { chapitre: row[4] || '', contenu_lecon: row[5] || '', res_lecon: row[6] || '', devoir: row[7] || '', res_devoir: row[8] || '', recherche: row[9] || '', projet: row[10] || '' }; const isFilled = Object.values(seanceData).some(val => val && val.trim() !== ''); if (isFilled) { sessionCounters[week]++; seanceData.seance_num = sessionCounters[week]; dataByMonth[month].weeks[week].seances.push(seanceData); } } } else { const weekSeances = dataByMonth[month].weeks[week].seances; if (!weekSeances.some(s => s.chapitre === event.type)) { const specialSeance = { seance_num: ' ', chapitre: event.type, contenu_lecon: '', res_lecon: '', devoir: '', res_devoir: '', recherche: '', projet: '' }; dataByMonth[month].weeks[week].seances.push(specialSeance); } } }); const monthsForTemplate = Object.values(dataByMonth).map((monthData, monthIndex) => { const monthRow = { month_name: monthData.month_name, page_break: monthIndex > 0 ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : '' }; const weeksInMonth = Object.values(monthData.weeks); for(let i=0; i<5; i++) { const weekProp = `week${i+1}`; if(weeksInMonth[i] && weeksInMonth[i].seances.length > 0) { monthRow[`${weekProp}_name`] = weeksInMonth[i].week_name; monthRow[`${weekProp}_seances`] = weeksInMonth[i].seances.sort((a, b) => { if (a.seance_num === ' ') return -1; if (b.seance_num === ' ') return 1; return a.seance_num - b.seance_num; }); } else { monthRow[`${weekProp}_name`] = ''; monthRow[`${weekProp}_seances`] = []; } } return monthRow; }); return { class_name: className, subject_name: subjectName, months: monthsForTemplate.filter(m => m.week1_seances.length > 0 || m.week2_seances.length > 0 || m.week3_seances.length > 0 || m.week4_seances.length > 0 || m.week5_seances.length > 0) }; }
-    async function generateWord() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière."); return; } showProgressBar(); try { const response = await fetch('https://cdn.glitch.global/f461e390-5b59-4aff-85c7-7f85022f90bc/Syllabus%20Distribution%204.docx?v=1751417043269'); if (!response.ok) throw new Error("Le modèle Word n'a pas pu être chargé."); const template = await response.arrayBuffer(); const zip = new PizZip(template); const doc = new docxtemplater(zip, { paragraphLoop: true, linebreaks: true, nullGetter: () => "" }); const templateData = prepareWordDataForSubject(selectedMatiere, savedData[selectedMatiere], currentClass); doc.render(templateData); const out = doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }); saveAs(out, `${currentClass}_${selectedMatiere}_Distribution.docx`); } catch (error) { console.error('Erreur lors de la génération du Word:', error); alert('Erreur lors de la génération du document Word. Vérifiez la console pour plus de détails.'); } finally { hideProgressBar(); } }
-    async function generateWordZipForClass() { if (!currentClass) { alert("Veuillez d'abord sélectionner une classe."); return; } if (Object.keys(savedData).length === 0) { alert("Les données de la classe ne sont pas encore chargées. Veuillez patienter ou recharger."); return; } showProgressBar(); try { const zip = new JSZip(); const subjects = classSubjects[currentClass]; if (!subjects || subjects.length === 0) { throw new Error("Aucune matière n'est définie pour cette classe."); } const response = await fetch('https://cdn.glitch.global/f461e390-5b59-4aff-85c7-7f85022f90bc/Syllabus%20Distribution%204.docx?v=1751417043269'); if (!response.ok) throw new Error("Le modèle Word n'a pas pu être chargé."); const template = await response.arrayBuffer(); for (const subject of subjects) { const subjectData = savedData[subject]; if (!subjectData || subjectData.length <= 1) { continue; } const templateData = prepareWordDataForSubject(subject, subjectData, currentClass); if (templateData.months.length > 0) { const pizZip = new PizZip(template.slice(0)); const doc = new docxtemplater(pizZip, { paragraphLoop: true, linebreaks: true, nullGetter: () => "" }); doc.render(templateData); const out = doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }); zip.file(`${currentClass}_${subject}_Distribution.docx`, out); } } if (Object.keys(zip.files).length > 0) { const content = await zip.generateAsync({ type: "blob" }); saveAs(content, `Distribution_Word_${currentClass}.zip`); } else { alert("Aucun document n'a pu être généré. Vérifiez que les matières contiennent des données."); } } catch (error) { console.error('Erreur lors de la génération du ZIP de documents Word:', error); alert('Une erreur est survenue : ' + error.message); } finally { hideProgressBar(); } }
-    // Fonction de diagnostic système
-    async function runSystemDiagnostic() {
-        showSuccessMessage('🩺 Diagnostic système en cours...', 1000);
-        
-        try {
-            // Test de l'API de santé
-            const healthResponse = await fetch('/api/health');
-            const healthData = await healthResponse.json();
-            
-            let diagnosticMessage = `🩺 DIAGNOSTIC SYSTÈME:\n\n`;
-            diagnosticMessage += `📊 Statut: ${healthData.status}\n`;
-            diagnosticMessage += `🕒 Timestamp: ${new Date(healthData.timestamp).toLocaleString()}\n\n`;
-            
-            diagnosticMessage += `🌍 ENVIRONNEMENT:\n`;
-            diagnosticMessage += `• Node.js: ${healthData.environment.node_version}\n`;
-            diagnosticMessage += `• MongoDB: ${healthData.environment.mongodb_configured ? '✅ Configuré' : '❌ Non configuré'}\n`;
-            diagnosticMessage += `• ConvertAPI: ${healthData.environment.convertapi_ready ? '✅ Prêt' : '⚠️ Non disponible'}\n\n`;
-            
-            // Test de connectivité MongoDB
-            try {
-                const mongoResponse = await fetch('/api/test-mongo');
-                const mongoData = await mongoResponse.json();
-                diagnosticMessage += `🗄️ TEST MONGODB:\n`;
-                diagnosticMessage += `• Connectivité: ${mongoData.status === 'success' ? '✅ OK' : '❌ Échec'}\n`;
-                if (mongoData.message) diagnosticMessage += `• Message: ${mongoData.message}\n`;
-                if (mongoData.details) diagnosticMessage += `• Détails: ${mongoData.details}\n`;
-            } catch (mongoError) {
-                diagnosticMessage += `🗄️ TEST MONGODB: ❌ Erreur - ${mongoError.message}\n`;
-            }
-            
-            diagnosticMessage += `\n🔧 RECOMMANDATIONS:\n`;
-            if (!healthData.environment.mongodb_configured) {
-                diagnosticMessage += `• Configurez MONGO_URL dans Vercel\n`;
-            }
-            if (!healthData.environment.convertapi_ready) {
-                diagnosticMessage += `• Configurez CONVERTAPI_SECRET dans Vercel\n`;
-            }
-            if (healthData.status === 'ok' && healthData.environment.mongodb_configured && healthData.environment.convertapi_ready) {
-                diagnosticMessage += `• ✅ Système entièrement opérationnel!\n`;
-            }
-            
-            alert(diagnosticMessage);
-            
-        } catch (error) {
-            console.error('Erreur diagnostic:', error);
-            alert(`❌ Erreur lors du diagnostic:\n${error.message}\n\nVérifiez la console pour plus de détails.`);
+    function prepareExcelDataForSubject(subjectName) {
+        const sheetData = savedData[subjectName];
+        if (!sheetData || sheetData.length <= 1) {
+            return null;
         }
+        
+        const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"];
+        const dataForExport = [exportHeaders];
+        let sessionCounters = {};
+        let weekMaxSessions = {};
+        const baseSessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][subjectName]) || 5;
+        
+        sheetData.slice(1).forEach((row, dataIndex) => {
+            const event = academicCalendar[dataIndex];
+            if (!event) return;
+            const weekValue = event.week;
+            
+            if (!weekMaxSessions[weekValue]) {
+                const specialDays = sheetData.slice(1).filter((r, i) => {
+                    const e = academicCalendar[i];
+                    return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e);
+                }).length;
+                
+                weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays);
+            }
+            
+            if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0;
+            
+            const sessionsPerWeek = weekMaxSessions[weekValue];
+            let seanceValue = '';
+            
+            if (isPlannable(event)) {
+                if (sessionCounters[weekValue] < sessionsPerWeek) {
+                    sessionCounters[weekValue]++;
+                    seanceValue = sessionCounters[weekValue];
+                } else {
+                    return;
+                }
+            }
+            
+            if (!isPlannable(event)) {
+                dataForExport.push([
+                    monthAbbreviations[row[0]] || row[0] || '',
+                    row[1] ? row[1].replace('Semaine ', 'S') : '',
+                    '',
+                    event.type,
+                    '', '', '', '', '', ''
+                ]);
+            } else {
+                dataForExport.push([
+                    monthAbbreviations[row[0]] || row[0] || '',
+                    row[1] ? row[1].replace('Semaine ', 'S') : '',
+                    seanceValue,
+                    row[4] || '',
+                    row[5] || '',
+                    row[6] || '',
+                    row[7] || '',
+                    row[8] || '',
+                    row[9] || '',
+                    row[10] || ''
+                ]);
+            }
+        });
+        
+        return dataForExport;
+    } const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][subjectName]) || 0; sheetData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; let seanceValue = ''; if (isPlannable(event)) { if(sessionCounters[weekValue] < sessionsPerWeek) { sessionCounters[weekValue]++; seanceValue = sessionCounters[weekValue]; } else { return; } } if (!isPlannable(event)) { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', '', event.type, '', '', '', '', '', '' ]); } else { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', seanceValue, row[4] || '', row[5] || '', row[6] || '', row[7] || '', row[8] || '', row[9] || '', row[10] || '' ]); } }); return dataForExport; }
+    function prepareWordDataForSubject(subjectName, subjectData, className) {
+        const data = subjectData.slice(1);
+        const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août');
+        const dataByMonth = {};
+        
+        dataForWord.forEach((row, index) => {
+            const originalIndex = data.findIndex(d => d === row);
+            const event = academicCalendar[originalIndex];
+            if (!event) return;
+            const month = event.month;
+            const week = event.week;
+            
+            if (!dataByMonth[month]) {
+                dataByMonth[month] = { month_name: month, weeks: {} };
+            }
+            if (!dataByMonth[month].weeks[week]) {
+                dataByMonth[month].weeks[week] = { week_name: week.replace('Semaine ', 'S'), seances: [] };
+            }
+        });
+        
+        let sessionCounters = {};
+        let weekMaxSessions = {};
+        const baseSessionsPerWeek = (classSessionCounts[className] && classSessionCounts[className][subjectName]) || 5;
+        
+        dataForWord.forEach((row, index) => {
+            const originalIndex = data.findIndex(d => d === row);
+            const event = academicCalendar[originalIndex];
+            if (!event) return;
+            const month = event.month;
+            const week = event.week;
+            
+            if (!weekMaxSessions[week]) {
+                const specialDays = data.filter((r, i) => {
+                    const e = academicCalendar[i];
+                    return e && e.week === week && !isPlannable(e) && isSpecialDay(e);
+                }).length;
+                
+                weekMaxSessions[week] = Math.max(1, baseSessionsPerWeek - specialDays);
+            }
+            
+            if (!sessionCounters[week]) sessionCounters[week] = 0;
+            
+            const isSpecialEvent = !isPlannable(event);
+            const sessionsPerWeek = weekMaxSessions[week];
+            
+            if (!isSpecialEvent) {
+                if (sessionCounters[week] < sessionsPerWeek) {
+                    const seanceData = {
+                        chapitre: row[4] || '',
+                        contenu_lecon: row[5] || '',
+                        res_lecon: row[6] || '',
+                        devoir: row[7] || '',
+                        res_devoir: row[8] || '',
+                        recherche: row[9] || '',
+                        projet: row[10] || ''
+                    };
+                    
+                    const isFilled = Object.values(seanceData).some(val => val && val.trim() !== '');
+                    if (isFilled) {
+                        sessionCounters[week]++;
+                        seanceData.seance_num = sessionCounters[week];
+                        dataByMonth[month].weeks[week].seances.push(seanceData);
+                    }
+                }
+            } else {
+                const weekSeances = dataByMonth[month].weeks[week].seances;
+                if (!weekSeances.some(s => s.chapitre === event.type)) {
+                    const specialSeance = {
+                        seance_num: ' ',
+                        chapitre: event.type,
+                        contenu_lecon: '',
+                        res_lecon: '',
+                        devoir: '',
+                        res_devoir: '',
+                        recherche: '',
+                        projet: ''
+                    };
+                    dataByMonth[month].weeks[week].seances.push(specialSeance);
+                }
+            }
+        });
+        
+        const monthsForTemplate = Object.values(dataByMonth).map((monthData, monthIndex) => {
+            const monthRow = {
+                month_name: monthData.month_name,
+                page_break: monthIndex > 0 ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : ''
+            };
+            
+            const weeksInMonth = Object.values(monthData.weeks);
+            for (let i = 0; i < 5; i++) {
+                const weekProp = `week${i + 1}`;
+                if (weeksInMonth[i] && weeksInMonth[i].seances.length > 0) {
+                    monthRow[`${weekProp}_name`] = weeksInMonth[i].week_name;
+                    monthRow[`${weekProp}_seances`] = weeksInMonth[i].seances.sort((a, b) => {
+                        if (a.seance_num === ' ') return -1;
+                        if (b.seance_num === ' ') return 1;
+                        return a.seance_num - b.seance_num;
+                    });
+                } else {
+                    monthRow[`${weekProp}_name`] = '';
+                    monthRow[`${weekProp}_seances`] = [];
+                }
+            }
+            return monthRow;
+        });
+        
+        return {
+            class_name: className,
+            subject_name: subjectName,
+            months: monthsForTemplate.filter(m => 
+                m.week1_seances.length > 0 || m.week2_seances.length > 0 || 
+                m.week3_seances.length > 0 || m.week4_seances.length > 0 || 
+                m.week5_seances.length > 0
+            )
+        };
     }
     
     showInitialSelection();
