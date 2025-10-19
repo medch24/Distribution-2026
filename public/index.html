@@ -470,17 +470,21 @@
                 renderSession(null);
             } else {
                 const remainingSessions = sessionsPerWeek - sessionCounters[weekValue];
-                const remainingDays = jsonData.slice(dataIndex).filter((r, i) => {
-                    const e = academicCalendar[dataIndex + i];
-                    return e && e.week === weekValue && isPlannable(e);
-                }).length;
-                
-                const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
-                const actualSessions = Math.min(sessionsThisDay, remainingSessions);
-                
-                for (let s = 0; s < actualSessions; s++) {
-                    sessionCounters[weekValue]++;
-                    renderSession(sessionCounters[weekValue]);
+                if (remainingSessions > 0) {
+                    const remainingDays = jsonData.slice(dataIndex).filter((r, i) => {
+                        const e = academicCalendar[dataIndex + i];
+                        return e && e.week === weekValue && isPlannable(e);
+                    }).length;
+                    
+                    if (remainingDays > 0) {
+                        const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
+                        const actualSessions = Math.min(sessionsThisDay, remainingSessions);
+                        
+                        for (let s = 0; s < actualSessions; s++) {
+                            sessionCounters[weekValue]++;
+                            renderSession(sessionCounters[weekValue]);
+                        }
+                    }
                 }
             }
         });
