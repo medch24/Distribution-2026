@@ -386,31 +386,40 @@
         table.appendChild(thead);
         const tbody = document.createElement('tbody');
         let sessionCounters = {};
-        let daySessionCounters = {};
-        const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][sheetName]) || 5;
+        let weekMaxSessions = {};
+        const baseSessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][sheetName]) || 5;
         
         jsonData.slice(1).forEach((row, dataIndex) => {
             const event = academicCalendar[dataIndex];
             if (!event) return;
             const weekValue = event.week;
-            const dayKey = `${weekValue}_${dataIndex}`;
+            
+            if(!weekMaxSessions[weekValue]) {
+                const daysInWeek = jsonData.slice(1).filter((r, i) => {
+                    const e = academicCalendar[i];
+                    return e && e.week === weekValue;
+                }).length;
+                
+                const plannableDays = jsonData.slice(1).filter((r, i) => {
+                    const e = academicCalendar[i];
+                    return e && e.week === weekValue && isPlannable(e);
+                }).length;
+                
+                const specialDays = jsonData.slice(1).filter((r, i) => {
+                    const e = academicCalendar[i];
+                    return e && e.week === weekValue && !isPlannable(e) && 
+                           (e.type.includes('day') || e.type.includes('Examen') || 
+                            e.type.includes('fête') || e.type.includes('férié') || 
+                            e.type.includes('congé'));
+                }).length;
+                
+                weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays);
+            }
             
             if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0;
-            if(!daySessionCounters[dayKey]) daySessionCounters[dayKey] = 0;
             
             const isSpecialEvent = !isPlannable(event);
-            
-            if (!isSpecialEvent) {
-                const sessionsThisDay = Math.ceil((sessionsPerWeek - sessionCounters[weekValue]) / 
-                    (jsonData.slice(dataIndex + 1).filter((r, i) => {
-                        const e = academicCalendar[dataIndex + 1 + i];
-                        return e && e.week === weekValue && isPlannable(e);
-                    }).length + 1));
-                
-                const maxSessionsThisDay = Math.max(1, Math.min(sessionsThisDay, sessionsPerWeek - sessionCounters[weekValue]));
-                
-                if (sessionCounters[weekValue] >= sessionsPerWeek) { return; }
-            }
+            const sessionsPerWeek = weekMaxSessions[weekValue];
 
             const renderSession = (sessionNum) => {
                 const rowElement = document.createElement('tr');
