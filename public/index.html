@@ -489,114 +489,6 @@
         output.appendChild(table);
         addEventListenersToTable(sheetName);
         applyFilter();
-    });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-        const tbody = document.createElement('tbody');
-        let sessionCounters = {};
-        let weekMaxSessions = {};
-        const baseSessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][sheetName]) || 5;
-        
-        jsonData.slice(1).forEach((row, dataIndex) => {
-            const event = academicCalendar[dataIndex];
-            if (!event) return;
-            const weekValue = event.week;
-            
-            if(!weekMaxSessions[weekValue]) {
-                const daysInWeek = jsonData.slice(1).filter((r, i) => {
-                    const e = academicCalendar[i];
-                    return e && e.week === weekValue;
-                }).length;
-                
-                const plannableDays = jsonData.slice(1).filter((r, i) => {
-                    const e = academicCalendar[i];
-                    return e && e.week === weekValue && isPlannable(e);
-                }).length;
-                
-                const specialDays = jsonData.slice(1).filter((r, i) => {
-                    const e = academicCalendar[i];
-                    return e && e.week === weekValue && !isPlannable(e) && 
-                           (e.type.includes('day') || e.type.includes('Examen') || 
-                            e.type.includes('fête') || e.type.includes('férié') || 
-                            e.type.includes('congé'));
-                }).length;
-                
-                weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays);
-            }
-            
-            if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0;
-            
-            const isSpecialEvent = !isPlannable(event);
-            const sessionsPerWeek = weekMaxSessions[weekValue];
-
-            const renderSession = (sessionNum) => {
-                const rowElement = document.createElement('tr');
-                const originalRowIndex = savedData[sheetName].findIndex(originalRow => originalRow === row);
-                const rowIndexForDB = originalRowIndex !== -1 ? originalRowIndex - 1 : -1;
-                
-                const monthTd = document.createElement('td');
-                monthTd.textContent = monthAbbreviations[row[0]] || row[0] || '';
-                rowElement.appendChild(monthTd);
-
-                const weekTd = document.createElement('td');
-                weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : '';
-                rowElement.appendChild(weekTd);
-
-                const seanceTd = document.createElement('td');
-                if (!isSpecialEvent) { seanceTd.textContent = sessionNum; }
-                rowElement.appendChild(seanceTd);
-                
-                if (isSpecialEvent) {
-                    const mergedCell = document.createElement('td');
-                    mergedCell.colSpan = displayedHeaders.length - 3;
-                    mergedCell.innerHTML = `<b>${event.type}</b>`;
-                    mergedCell.classList.add('merged-cell');
-                    let bgColor = '#f2f2f2';
-                    if (event.type.includes('Vacances')) bgColor = '#90EE90';
-                    else if (event.type.includes('Examen')) bgColor = '#FFA07A';
-                    else if (event.type.includes('day')) bgColor = '#ADD8E6';
-                    else if (event.type.includes('Orientation')) bgColor = '#FFD700';
-                    else if (event.type.includes('weekend')) bgColor = '#D3D3D3';
-                    mergedCell.style.backgroundColor = bgColor;
-                    rowElement.appendChild(mergedCell);
-                } else {
-                    for (let i = 4; i < standardHeaders.length; i++) {
-                        const td = document.createElement('td');
-                        const input = document.createElement('textarea');
-                        input.value = row[i] || '';
-                        input.className = 'modifiable-input';
-                        input.dataset.rowIndex = rowIndexForDB;
-                        input.dataset.colIndex = i;
-                        td.appendChild(input);
-                        rowElement.appendChild(td);
-                    }
-                }
-                tbody.appendChild(rowElement);
-            };
-
-            if (isSpecialEvent) {
-                renderSession(null);
-            } else {
-                const remainingSessions = sessionsPerWeek - sessionCounters[weekValue];
-                const remainingDays = jsonData.slice(dataIndex).filter((r, i) => {
-                    const e = academicCalendar[dataIndex + i];
-                    return e && e.week === weekValue && isPlannable(e);
-                }).length;
-                
-                const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
-                const actualSessions = Math.min(sessionsThisDay, remainingSessions);
-                
-                for (let s = 0; s < actualSessions; s++) {
-                    sessionCounters[weekValue]++;
-                    renderSession(sessionCounters[weekValue]);
-                }
-            }
-        });
-        
-        table.appendChild(tbody);
-        output.appendChild(table);
-        addEventListenersToTable(sheetName);
-        applyFilter();
     }
 
     function addEventListenersToTable(sheetName) {
@@ -686,7 +578,7 @@
         });
         
         return dataForExport;
-    } const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][subjectName]) || 0; sheetData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; let seanceValue = ''; if (isPlannable(event)) { if(sessionCounters[weekValue] < sessionsPerWeek) { sessionCounters[weekValue]++; seanceValue = sessionCounters[weekValue]; } else { return; } } if (!isPlannable(event)) { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', '', event.type, '', '', '', '', '', '' ]); } else { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', seanceValue, row[4] || '', row[5] || '', row[6] || '', row[7] || '', row[8] || '', row[9] || '', row[10] || '' ]); } }); return dataForExport; }
+    }
     function prepareWordDataForSubject(subjectName, subjectData, className) {
         const data = subjectData.slice(1);
         const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août');
