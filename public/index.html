@@ -347,6 +347,98 @@
         }
     }
 
+    async function generateWord() {
+        const selectedMatiere = document.getElementById('matiereSelect').value;
+        if (!currentClass || !selectedMatiere) {
+            alert("Veuillez sélectionner une classe et une matière.");
+            return;
+        }
+        showProgressBar();
+        try {
+            const response = await fetch('https://cdn.glitch.global/f461e390-5b59-4aff-85c7-7f85022f90bc/Syllabus%20Distribution%204.docx?v=1751417043269');
+            if (!response.ok) throw new Error("Le modèle Word n'a pas pu être chargé.");
+            const template = await response.arrayBuffer();
+            const zip = new PizZip(template);
+            const doc = new docxtemplater(zip, { paragraphLoop: true, linebreaks: true, nullGetter: () => "" });
+
+            const templateData = prepareWordDataForSubject(selectedMatiere, savedData[selectedMatiere], currentClass);
+            doc.render(templateData);
+
+            const docxBlob = doc.getZip().generate({ 
+                type: 'blob',
+                mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            });
+
+            saveAs(docxBlob, `${currentClass}_${selectedMatiere}_Distribution.docx`);
+            showSuccessMessage("Document Word généré avec succès!");
+
+        } catch (error) {
+            console.error('Erreur lors de la génération du document Word:', error);
+            showErrorMessage('Une erreur est survenue lors de la génération du document Word: ' + error.message);
+        } finally {
+            hideProgressBar();
+        }
+    }
+
+    async function generateWordZipForClass() {
+        if (!currentClass) {
+            alert("Veuillez d'abord sélectionner une classe.");
+            return;
+        }
+        if (Object.keys(savedData).length === 0) {
+            alert("Les données de la classe ne sont pas encore chargées. Veuillez patienter ou recharger.");
+            return;
+        }
+        showProgressBar();
+        try {
+            const response = await fetch('https://cdn.glitch.global/f461e390-5b59-4aff-85c7-7f85022f90bc/Syllabus%20Distribution%204.docx?v=1751417043269');
+            if (!response.ok) throw new Error("Le modèle Word n'a pas pu être chargé.");
+            const template = await response.arrayBuffer();
+
+            const zip = new JSZip();
+            const subjects = classSubjects[currentClass];
+            
+            if (!subjects || subjects.length === 0) {
+                throw new Error("Aucune matière n'est définie pour cette classe.");
+            }
+
+            for (const subject of subjects) {
+                if (savedData[subject] && savedData[subject].length > 1) {
+                    try {
+                        const templateZip = new PizZip(template);
+                        const doc = new docxtemplater(templateZip, { 
+                            paragraphLoop: true, 
+                            linebreaks: true, 
+                            nullGetter: () => "" 
+                        });
+
+                        const templateData = prepareWordDataForSubject(subject, savedData[subject], currentClass);
+                        doc.render(templateData);
+
+                        const docxBuffer = doc.getZip().generate({ type: 'uint8array' });
+                        zip.file(`${currentClass}_${subject}_Distribution.docx`, docxBuffer);
+                    } catch (docError) {
+                        console.warn(`Erreur lors de la génération du document pour ${subject}:`, docError);
+                    }
+                }
+            }
+
+            if (Object.keys(zip.files).length > 0) {
+                const content = await zip.generateAsync({ type: "blob" });
+                saveAs(content, `Distribution_Word_${currentClass}.zip`);
+                showSuccessMessage("Archive ZIP des documents Word générée avec succès!");
+            } else {
+                alert("Aucun document Word n'a pu être généré. Vérifiez que les matières contiennent des données.");
+            }
+
+        } catch (error) {
+            console.error('Erreur lors de la génération du ZIP de fichiers Word:', error);
+            showErrorMessage('Une erreur est survenue : ' + error.message);
+        } finally {
+            hideProgressBar();
+        }
+    }
+
     function generateInitialData(calendar = academicCalendar) {
         const data = [standardHeaders];
         calendar.forEach(event => {
@@ -630,7 +722,9 @@
             
             if (!isSpecialEvent) {
                 if (sessionCounters[week] < sessionsPerWeek) {
+                    sessionCounters[week]++;
                     const seanceData = {
+                        seance_num: sessionCounters[week],
                         chapitre: row[4] || '',
                         contenu_lecon: row[5] || '',
                         res_lecon: row[6] || '',
@@ -639,13 +733,7 @@
                         recherche: row[9] || '',
                         projet: row[10] || ''
                     };
-                    
-                    const isFilled = Object.values(seanceData).some(val => val && val.trim() !== '');
-                    if (isFilled) {
-                        sessionCounters[week]++;
-                        seanceData.seance_num = sessionCounters[week];
-                        dataByMonth[month].weeks[week].seances.push(seanceData);
-                    }
+                    dataByMonth[month].weeks[week].seances.push(seanceData);
                 }
             } else {
                 const weekSeances = dataByMonth[month].weeks[week].seances;
