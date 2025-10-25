@@ -721,19 +721,37 @@
             const sessionsPerWeek = weekMaxSessions[week];
             
             if (!isSpecialEvent) {
-                if (sessionCounters[week] < sessionsPerWeek) {
-                    sessionCounters[week]++;
-                    const seanceData = {
-                        seance_num: sessionCounters[week],
-                        chapitre: row[4] || '',
-                        contenu_lecon: row[5] || '',
-                        res_lecon: row[6] || '',
-                        devoir: row[7] || '',
-                        res_devoir: row[8] || '',
-                        recherche: row[9] || '',
-                        projet: row[10] || ''
-                    };
-                    dataByMonth[month].weeks[week].seances.push(seanceData);
+                // Calculer combien de séances restent à distribuer dans cette semaine
+                const remainingSessions = sessionsPerWeek - sessionCounters[week];
+                if (remainingSessions > 0) {
+                    // Calculer combien de jours planifiables restent dans cette semaine
+                    const remainingDays = dataForWord.slice(index).filter((r, i) => {
+                        const rOriginalIndex = data.findIndex(d => d === r);
+                        const e = academicCalendar[rOriginalIndex];
+                        return e && e.week === week && isPlannable(e);
+                    }).length;
+                    
+                    if (remainingDays > 0) {
+                        // Calculer combien de séances à créer pour ce jour
+                        const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
+                        const actualSessions = Math.min(sessionsThisDay, remainingSessions);
+                        
+                        // Créer plusieurs séances pour ce jour si nécessaire
+                        for (let s = 0; s < actualSessions; s++) {
+                            sessionCounters[week]++;
+                            const seanceData = {
+                                seance_num: sessionCounters[week],
+                                chapitre: row[4] || '',
+                                contenu_lecon: row[5] || '',
+                                res_lecon: row[6] || '',
+                                devoir: row[7] || '',
+                                res_devoir: row[8] || '',
+                                recherche: row[9] || '',
+                                projet: row[10] || ''
+                            };
+                            dataByMonth[month].weeks[week].seances.push(seanceData);
+                        }
+                    }
                 }
             } else {
                 const weekSeances = dataByMonth[month].weeks[week].seances;
