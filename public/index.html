@@ -522,7 +522,12 @@
                 rowElement.appendChild(monthTd);
 
                 const weekTd = document.createElement('td');
-                weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : '';
+                // Afficher seulement le numéro de semaine pour les cours normaux, rien pour les événements spéciaux
+                if (isSpecialEvent) {
+                    weekTd.textContent = '';
+                } else {
+                    weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : '';
+                }
                 rowElement.appendChild(weekTd);
 
                 const seanceTd = document.createElement('td');
@@ -535,11 +540,13 @@
                     mergedCell.innerHTML = `<b>${event.type}</b>`;
                     mergedCell.classList.add('merged-cell');
                     let bgColor = '#f2f2f2';
-                    if (event.type.includes('Vacances')) bgColor = '#90EE90';
-                    else if (event.type.includes('Examen')) bgColor = '#FFA07A';
-                    else if (event.type.includes('day')) bgColor = '#ADD8E6';
-                    else if (event.type.includes('Orientation')) bgColor = '#FFD700';
-                    else if (event.type.includes('weekend')) bgColor = '#D3D3D3';
+                    const typeLC = event.type.toLowerCase();
+                    if (typeLC.includes('vacance')) bgColor = '#90EE90';
+                    else if (typeLC.includes('examen')) bgColor = '#FFA07A';
+                    else if (typeLC.includes('evaluation') || typeLC.includes('évaluation')) bgColor = '#FFB6C1';
+                    else if (typeLC.includes('day')) bgColor = '#ADD8E6';
+                    else if (typeLC.includes('orientation')) bgColor = '#FFD700';
+                    else if (typeLC.includes('weekend')) bgColor = '#D3D3D3';
                     mergedCell.style.backgroundColor = bgColor;
                     rowElement.appendChild(mergedCell);
                 } else {
@@ -755,7 +762,7 @@
             if (!isPlannable(event)) {
                 dataForExport.push([
                     monthAbbreviations[row[0]] || row[0] || '',
-                    row[1] ? row[1].replace('Semaine ', 'S') : '',
+                    '', // Pas de numéro de semaine pour les événements spéciaux
                     '',
                     event.type,
                     '', '', '', '', '', ''
@@ -794,7 +801,8 @@
                 dataByMonth[month] = { month_name: month, weeks: {} };
             }
             if (!dataByMonth[month].weeks[week]) {
-                dataByMonth[month].weeks[week] = { week_name: week.replace('Semaine ', 'S'), seances: [] };
+                // Garder le nom complet pour Word
+                dataByMonth[month].weeks[week] = { week_name: week, seances: [] };
             }
         });
         
