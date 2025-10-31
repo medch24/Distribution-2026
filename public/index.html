@@ -787,12 +787,13 @@
     }
     function prepareWordDataForSubject(subjectName, subjectData, className) {
         const data = subjectData.slice(1);
+        // Filter both data and calendar together, excluding Août
         const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août');
+        const calendarForWord = academicCalendar.filter(event => event && event.month !== 'Août');
         const dataByMonth = {};
         
         dataForWord.forEach((row, index) => {
-            const originalIndex = data.findIndex(d => d === row);
-            const event = academicCalendar[originalIndex];
+            const event = calendarForWord[index];
             if (!event) return;
             const month = event.month;
             const week = event.week;
@@ -811,15 +812,13 @@
         const baseSessionsPerWeek = (classSessionCounts[className] && classSessionCounts[className][subjectName]) || 5;
         
         dataForWord.forEach((row, index) => {
-            const originalIndex = data.findIndex(d => d === row);
-            const event = academicCalendar[originalIndex];
+            const event = calendarForWord[index];
             if (!event) return;
             const month = event.month;
             const week = event.week;
             
             if (!weekMaxSessions[week]) {
-                const specialDays = data.filter((r, i) => {
-                    const e = academicCalendar[i];
+                const specialDays = calendarForWord.filter((e) => {
                     return e && e.week === week && !isPlannable(e) && isSpecialDay(e);
                 }).length;
                 
@@ -836,9 +835,7 @@
                 const remainingSessions = sessionsPerWeek - sessionCounters[week];
                 if (remainingSessions > 0) {
                     // Calculer combien de jours planifiables restent dans cette semaine
-                    const remainingDays = dataForWord.slice(index).filter((r, i) => {
-                        const rOriginalIndex = data.findIndex(d => d === r);
-                        const e = academicCalendar[rOriginalIndex];
+                    const remainingDays = calendarForWord.slice(index).filter((e, i) => {
                         return e && e.week === week && isPlannable(e);
                     }).length;
                     
