@@ -106,16 +106,7 @@
                type.includes('weekend') ||
                type.includes('evaluation');
     };
-    
-    // Fonction pour identifier les jours spéciaux qui comptent comme une séance
-    // (Saudi National day, evaluation, examen, Saudi Fondation Day)
-    const countsAsSession = (event) => {
-        if (!event) return false;
-        const type = event.type.toLowerCase();
-        return type.includes('saudi') || 
-               type.includes('evaluation') || 
-               type.includes('examen');
-    };
+
 
 
     // === GESTION AMÉLIORÉE DES ERREURS ===
@@ -509,15 +500,16 @@
             const weekValue = event.week;
             
             if(!weekMaxSessions[weekValue]) {
-                // Compter les jours qui comptent comme séance (Saudi National day, evaluation, examen, Saudi Fondation Day)
-                const sessionDays = jsonData.slice(1).filter((r, i) => {
+                // Compter les jours spéciaux qui NE SONT PAS plannables (Saudi National day, evaluation, examen, Saudi Fondation Day)
+                // Ces jours RÉDUISENT le nombre de séances normales disponibles
+                const specialDaysCount = jsonData.slice(1).filter((r, i) => {
                     const e = academicCalendar[i];
-                    return e && e.week === weekValue && countsAsSession(e);
+                    return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e);
                 }).length;
                 
-                // Les jours spéciaux comptent comme séance, donc on ne soustrait plus
-                // On ajoute simplement les jours spéciaux au nombre de base de séances
-                weekMaxSessions[weekValue] = baseSessionsPerWeek;
+                // Les jours spéciaux RÉDUISENT le nombre de séances normales
+                // Exemple: 6 séances/semaine - 1 jour spécial = 5 séances normales
+                weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDaysCount);
             }
             
             if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0;
@@ -803,20 +795,28 @@
         // Filter both data and calendar together, excluding Août
         const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août');
         const calendarForWord = academicCalendar.filter(event => event && event.month !== 'Août');
-        const dataByMonth = {};
         
+        // Structure les données par semaine (utilise le numéro de semaine du calendrier)
+        const dataByWeek = {};
+        
+        // Fonction pour extraire le numéro de semaine (ex: "Semaine 2" -> 2)
+        function getWeekNumber(weekString) {
+            const match = weekString.match(/Semaine (\d+)/);
+            return match ? parseInt(match[1], 10) : null;
+        }
+        
+        // Initialiser toutes les semaines présentes dans le calendrier
         dataForWord.forEach((row, index) => {
             const event = calendarForWord[index];
             if (!event) return;
-            const month = event.month;
             const week = event.week;
+            const weekNum = getWeekNumber(week);
             
-            if (!dataByMonth[month]) {
-                dataByMonth[month] = { month_name: month, weeks: {} };
-            }
-            if (!dataByMonth[month].weeks[week]) {
-                // Garder le nom complet pour Word
-                dataByMonth[month].weeks[week] = { week_name: week, seances: [] };
+            if (weekNum && !dataByWeek[weekNum]) {
+                dataByWeek[weekNum] = { 
+                    week_name: week, 
+                    seances: [] 
+                };
             }
         });
         
@@ -827,28 +827,30 @@
         dataForWord.forEach((row, index) => {
             const event = calendarForWord[index];
             if (!event) return;
-            const month = event.month;
             const week = event.week;
+            const weekNum = getWeekNumber(week);
             
-            if (!weekMaxSessions[week]) {
+            if (!weekNum) return;
+            
+            if (!weekMaxSessions[weekNum]) {
                 const specialDays = calendarForWord.filter((e) => {
                     return e && e.week === week && !isPlannable(e) && isSpecialDay(e);
                 }).length;
                 
-                weekMaxSessions[week] = Math.max(1, baseSessionsPerWeek - specialDays);
+                weekMaxSessions[weekNum] = Math.max(1, baseSessionsPerWeek - specialDays);
             }
             
-            if (!sessionCounters[week]) sessionCounters[week] = 0;
+            if (!sessionCounters[weekNum]) sessionCounters[weekNum] = 0;
             
             const isSpecialEvent = !isPlannable(event);
-            const sessionsPerWeek = weekMaxSessions[week];
+            const sessionsPerWeek = weekMaxSessions[weekNum];
             
             if (!isSpecialEvent) {
                 // Calculer combien de séances restent à distribuer dans cette semaine
-                const remainingSessions = sessionsPerWeek - sessionCounters[week];
+                const remainingSessions = sessionsPerWeek - sessionCounters[weekNum];
                 if (remainingSessions > 0) {
                     // Calculer combien de jours planifiables restent dans cette semaine
-                    const remainingDays = calendarForWord.slice(index).filter((e, i) => {
+                    const remainingDays = calendarForWord.slice(index).filter((e) => {
                         return e && e.week === week && isPlannable(e);
                     }).length;
                     
@@ -859,9 +861,9 @@
                         
                         // Créer plusieurs séances pour ce jour si nécessaire
                         for (let s = 0; s < actualSessions; s++) {
-                            sessionCounters[week]++;
+                            sessionCounters[weekNum]++;
                             const seanceData = {
-                                seance_num: sessionCounters[week],
+                                seance_num: sessionCounters[weekNum],
                                 chapitre: row[4] || '',
                                 contenu_lecon: row[5] || '',
                                 res_lecon: row[6] || '',
@@ -870,12 +872,12 @@
                                 recherche: row[9] || '',
                                 projet: row[10] || ''
                             };
-                            dataByMonth[month].weeks[week].seances.push(seanceData);
+                            dataByWeek[weekNum].seances.push(seanceData);
                         }
                     }
                 }
             } else {
-                const weekSeances = dataByMonth[month].weeks[week].seances;
+                const weekSeances = dataByWeek[weekNum].seances;
                 if (!weekSeances.some(s => s.chapitre === event.type)) {
                     const specialSeance = {
                         seance_num: ' ',
@@ -887,51 +889,35 @@
                         recherche: '',
                         projet: ''
                     };
-                    dataByMonth[month].weeks[week].seances.push(specialSeance);
+                    dataByWeek[weekNum].seances.push(specialSeance);
                 }
             }
         });
         
-        const monthsForTemplate = Object.values(dataByMonth).map((monthData, monthIndex) => {
-            const monthRow = {
-                month_name: monthData.month_name,
-                page_break: monthIndex > 0 ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : ''
-            };
-            
-            const weeksInMonth = Object.values(monthData.weeks);
-            // Supporter jusqu'à 6 semaines par mois au lieu de 5
-            for (let i = 0; i < Math.min(6, weeksInMonth.length); i++) {
-                const weekProp = `week${i + 1}`;
-                if (weeksInMonth[i] && weeksInMonth[i].seances.length > 0) {
-                    monthRow[`${weekProp}_name`] = weeksInMonth[i].week_name;
-                    monthRow[`${weekProp}_seances`] = weeksInMonth[i].seances.sort((a, b) => {
-                        if (a.seance_num === ' ') return -1;
-                        if (b.seance_num === ' ') return 1;
-                        return a.seance_num - b.seance_num;
-                    });
-                } else {
-                    monthRow[`${weekProp}_name`] = '';
-                    monthRow[`${weekProp}_seances`] = [];
-                }
-            }
-            // Remplir les positions de semaines restantes avec des valeurs vides
-            for (let i = weeksInMonth.length; i < 6; i++) {
-                const weekProp = `week${i + 1}`;
-                monthRow[`${weekProp}_name`] = '';
-                monthRow[`${weekProp}_seances`] = [];
-            }
-            return monthRow;
-        });
-        
-        return {
+        // Construire le résultat avec les clés basées sur les numéros de semaine du calendrier
+        // Ex: week2_seances, week4_seances, week7_seances, etc.
+        const templateData = {
             class_name: className,
-            subject_name: subjectName,
-            months: monthsForTemplate.filter(m => 
-                m.week1_seances.length > 0 || m.week2_seances.length > 0 || 
-                m.week3_seances.length > 0 || m.week4_seances.length > 0 || 
-                m.week5_seances.length > 0 || m.week6_seances.length > 0
-            )
+            subject_name: subjectName
         };
+        
+        // Ajouter chaque semaine avec son numéro spécifique
+        Object.keys(dataByWeek).forEach(weekNum => {
+            const weekData = dataByWeek[weekNum];
+            const weekKey = `week${weekNum}`;
+            
+            // Trier les séances
+            const sortedSeances = weekData.seances.sort((a, b) => {
+                if (a.seance_num === ' ') return -1;
+                if (b.seance_num === ' ') return 1;
+                return a.seance_num - b.seance_num;
+            });
+            
+            templateData[`${weekKey}_name`] = weekData.week_name;
+            templateData[`${weekKey}_seances`] = sortedSeances;
+        });
+        
+        return templateData;
     }
     
     showInitialSelection();
