@@ -56,13 +56,12 @@
     <div class="button-container" style="margin-bottom: 20px; margin-top: 10px;">
         <button onclick="generateExcel()">Générer Excel (Matière)</button>
         <button onclick="generateWord()">Générer Word (Matière)</button>
-        <button onclick="generatePdf()" style="background-color: #c82333;">Générer PDF (Matière)</button>
         <button onclick="generateExcelZipForClass()">Générer Excel (ZIP par Classe)</button>
         <button onclick="generateWordZipForClass()">Générer Word (ZIP par Classe)</button>
         <button onclick="saveTable()">Enregistrer les modifications</button>
+        <button onclick="resetCurrentMatiere()" style="background-color: #dc3545;">🔄 Réinitialiser la matière</button>
         <button onclick="document.getElementById('excelUploadInput').click()" style="background-color: #17a2b8;">Importer Excel</button>
         <input type="file" id="excelUploadInput" style="display: none;" onchange="handleFileUpload(event)" accept=".xlsx, .xls">
-        <button onclick="runSystemDiagnostic()" style="background-color: #28a745;">🩺 Diagnostic Système</button>
     </div>
     <div>
         <label for="matiereSelect">Choisir une matière :</label>
@@ -260,6 +259,41 @@
         } catch (error) {
             console.error("Erreur lors du chargement de la classe:", error);
             showErrorMessage("Erreur de chargement de la classe: " + error.message);
+        } finally {
+            hideProgressBar();
+        }
+    }
+    
+    async function resetCurrentMatiere() {
+        const selectedMatiere = document.getElementById('matiereSelect').value;
+        if (!currentClass || !selectedMatiere) {
+            alert("Veuillez sélectionner une classe et une matière.");
+            return;
+        }
+        
+        if (!confirm(`Êtes-vous sûr de vouloir réinitialiser "${selectedMatiere}" avec le calendrier 2025-2026?\n\nToutes les données existantes seront remplacées par le nouveau calendrier.`)) {
+            return;
+        }
+        
+        showProgressBar();
+        try {
+            // Régénérer les données avec le calendrier actuel
+            savedData[selectedMatiere] = generateInitialData();
+            
+            // Sauvegarder automatiquement
+            const ack = await apiCall('saveTable', { 
+                className: currentClass, 
+                sheetName: selectedMatiere, 
+                data: savedData[selectedMatiere] 
+            });
+            
+            if (ack.success) {
+                showSuccessMessage(`"${selectedMatiere}" a été réinitialisée avec le calendrier 2025-2026 (31 semaines)!`);
+                // Rafraîchir l'affichage
+                displaySelectedTable();
+            }
+        } catch (error) {
+            showErrorMessage("Erreur lors de la réinitialisation: " + error.message);
         } finally {
             hideProgressBar();
         }
