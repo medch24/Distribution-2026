@@ -6,6 +6,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const ConvertAPI = require('convertapi');
 const OpenAI = require('openai');
+// Node 18+ has global fetch; used for GROQ fallback
 const mammoth = require('mammoth');
 
 const app = express();
@@ -13,6 +14,7 @@ const app = express();
 const MONGO_URL = process.env.MONGO_URL;
 const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const classDatabases = {};
 
 // --- Utils ---
@@ -59,6 +61,13 @@ if (CONVERTAPI_SECRET && CONVERTAPI_SECRET !== 'your_convertapi_secret_here') {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+// Normalize Vercel path prefix so routes work whether called as "/events" or "/api/events"
+app.use((req, _res, next) => {
+  if (req.url === '/api') req.url = '/';
+  else if (req.url.startsWith('/api/')) req.url = req.url.substring(4);
+  next();
+});
+
 // === SSE (auto-refresh + présence) ===
 const sseClients = new Set();
 function broadcast(event, payload) {
@@ -80,6 +89,7 @@ function cleanupPresence() {
 }
 setInterval(cleanupPresence, 10000);
 
+// Alias to support direct "/api/events" calls too (after prefix-strip this still matches)
 app.get('/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -105,6 +115,7 @@ app.post('/presence/heartbeat', (req, res) => {
 });
 
 // === Health ===
+// Health endpoint (+ alias via prefix normalizer)
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -113,6 +124,8 @@ app.get('/health', (req, res) => {
       node_version: process.version,
       mongodb_configured: !!MONGO_URL,
       convertapi_configured: !!CONVERTAPI_SECRET,
+      openai_configured: !!OPENAI_API_KEY,
+      groq_configured: !!GROQ_API_KEY,
     },
     services: { pdf_conversion: !!convertapi ? 'ready' : 'not_available' },
   });
@@ -142,23 +155,55 @@ function buildPromptForSubject(subject, className, plainText) {
   return `Vous êtes un assistant pédagogique. À partir du texte brut ci-dessous issu d'un document Word (plan de cours/syllabus), générez un plan annuel structuré pour une seule matière.\n\nContraintes strictes:\n- Sortie attendue: un tableau JSON (Array) nommé sessions, chaque entrée représentant une séance dans l'ordre chronologique.\n- Ne retournez QUE du JSON valide de la forme {"sessions": [...]}, sans texte additionnel.\n- Les clés de chaque objet séance: ["unite", "contenu", "ressources_lecon", "devoir", "ressources_devoir", "recherche", "projet"].\n- Répartissez le contenu par semaine en comblant intelligemment les séances disponibles, sans laisser de vides.\n- Ajoutez pour la fin de CHAQUE semaine: 1 recherche (recherche) et 1 projet (projet) alignés sur le thème étudié.\n- Restez concis, phrases courtes, puces si nécessaire.\n- N'incluez pas de dates; l'app se charge d'assigner aux jours planifiables.\n\nContexte:\n- Classe: ${className}\n- Matière: ${subject}\n- Texte source (extraits nettoyés):\n${plainText.substring(0, 15000)}\n`;
 }
 async function aiPlanFromText(subject, className, plainText) {
-  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY manquant');
-  const client = new OpenAI({ apiKey: OPENAI_API_KEY });
-  const completion = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: 'Vous renvoyez strictement un JSON valide.' },
-      { role: 'user', content: buildPromptForSubject(subject, className, plainText) },
-    ],
-    temperature: 0.2,
-  });
-  const text = completion.choices?.[0]?.message?.content || '{}';
-  try {
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed)) return parsed;
-    if (Array.isArray(parsed.sessions)) return parsed.sessions;
-    if (Array.isArray(parsed.data)) return parsed.data;
-  } catch (_) {}
+  const userPrompt = buildPromptForSubject(subject, className, plainText);
+  if (OPENAI_API_KEY) {
+    try {
+      const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+      const completion = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'Vous renvoyez strictement un JSON valide.' },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.2,
+      });
+      const text = completion.choices?.[0]?.message?.content || '{}';
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed.sessions)) return parsed.sessions;
+        if (Array.isArray(parsed.data)) return parsed.data;
+      } catch (_) {}
+    } catch (e) {
+      console.error('OpenAI error, will try GROQ fallback:', e.message);
+    }
+  }
+  if (GROQ_API_KEY) {
+    try {
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: 'llama-3.1-70b-versatile',
+          messages: [
+            { role: 'system', content: 'Vous renvoyez strictement un JSON valide.' },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.2
+        })
+      });
+      const data = await resp.json();
+      const text = data?.choices?.[0]?.message?.content || '{}';
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed.sessions)) return parsed.sessions;
+        if (Array.isArray(parsed.data)) return parsed.data;
+      } catch (_) {}
+    } catch (e) {
+      console.error('GROQ error:', e.message);
+    }
+  }
   return [];
 }
 
