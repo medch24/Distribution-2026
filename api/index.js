@@ -16,23 +16,37 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const classDatabases = {};
 
 // --- Utils ---
+let mongoClient = null;
+let mongoPromise = null;
+async function getMongoClient() {
+  if (mongoClient) return mongoClient;
+  if (!MONGO_URL) return null;
+  if (!mongoPromise) {
+    mongoPromise = (async () => {
+      const client = new MongoClient(MONGO_URL, {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+        maxPoolSize: 10,
+      });
+      await client.connect();
+      return client;
+    })().catch((e) => { console.error('DB connect error:', e); mongoPromise = null; return null; });
+  }
+  mongoClient = await mongoPromise;
+  return mongoClient;
+}
+
 async function connectToClassDatabase(className) {
   if (classDatabases[className]) return classDatabases[className];
-  if (!MONGO_URL) return null;
+  const client = await getMongoClient();
+  if (!client) return null;
   try {
-    const client = await MongoClient.connect(MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
-      maxPoolSize: 10,
-    });
     const dbName = `Classe_${className.replace(/[^a-zA-Z0-9]/g, '_')}`;
     const db = client.db(dbName);
     classDatabases[className] = db;
     return db;
   } catch (e) {
-    console.error('DB connect error:', e);
+    console.error('DB select error:', e);
     return null;
   }
 }
@@ -107,10 +121,11 @@ app.get('/health', (req, res) => {
 app.get('/test-mongo', async (req, res) => {
   if (!MONGO_URL) return res.status(500).json({ error: 'MONGO_URL non configurée' });
   try {
-    const client = await MongoClient.connect(MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000 });
-    await client.db('admin').command({ ismaster: 1 });
-    client.close();
-    res.json({ status: 'success' });
+    const client = await getMongoClient();
+    if (!client) return res.status(500).json({ status: 'error', details: 'Impossible de se connecter au cluster' });
+    const admin = client.db('admin');
+    const info = await admin.command({ ping: 1 });
+    res.json({ status: 'success', info });
   } catch (e) { res.status(500).json({ status: 'error', details: e.message }); }
 });
 
@@ -197,10 +212,11 @@ app.post('/saveTable', async (req, res) => {
     const allTables = await db.collection('tables').find().toArray();
     const formatted = allTables.map(t => ({ matiere: t.sheetName, data: t.data }));
     await db.collection('savedCopies').insertOne({ timestamp: new Date(), tables: formatted });
+    // also persist selections if present in payload in future
     broadcast('refresh', { className, sheetName, ts: Date.now() });
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Error saving table' });
+    res.status(500).json({ error: `Error saving table: ${e.message}` });
   }
 });
 
@@ -210,13 +226,14 @@ app.post('/loadLatestCopy', async (req, res) => {
   try {
     const db = await connectToClassDatabase(className);
     if (!db) return res.status(500).json({ error: `Cannot connect to DB for ${className}` });
-    const latest = await db.collection('savedCopies').find({ 'tables.0': { '$exists': true } }).sort({ timestamp: -1 }).limit(1).toArray();
-    if (latest.length > 0 && latest[0].tables) return res.json({ success: true, tables: latest[0].tables });
+    const latest = await db.collection('savedCopies').find({}).sort({ timestamp: -1 }).limit(1).toArray();
+    if (latest.length > 0 && Array.isArray(latest[0].tables)) return res.json({ success: true, tables: latest[0].tables });
     const allTables = await db.collection('tables').find().toArray();
     const formatted = allTables.map(t => ({ matiere: t.sheetName, data: t.data }));
     res.json({ success: true, tables: formatted.length > 0 ? formatted : [] });
   } catch (e) {
-    res.status(500).json({ success: false, error: 'Error loading saved data' });
+    if (e.codeName === 'NamespaceNotFound') return res.json({ success: true, tables: [] });
+    res.status(500).json({ success: false, error: `Error loading saved data: ${e.message}` });
   }
 });
 
