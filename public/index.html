@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- La ligne pour socket.io.js a été supprimée d'ici -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="white"/><path d="M16 96l112-40 112 40-112 40z" fill="%232563eb"/><path d="M64 120v48c0 22 48 40 64 40s64-18 64-40v-48" fill="none" stroke="%233b82f6" stroke-width="12"/></svg>' type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -66,8 +67,8 @@
     </div>
 </div>
 
-<script>
-/* NOTE: Core logic has moved to public/script.js. We keep this inline block for backward compatibility and to preserve existing behaviour during transition. */
+<script type="application/json" id="legacy-inline-disabled">
+/* NOTE: Core logic has moved to public/script.js. Legacy inline script disabled to avoid duplicate globals. */
     let currentClass = null; let savedData = {};
     let currentUserId = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random())).toString();
     let sse; let presenceKey = null; let presenceTimer = null;
@@ -1066,6 +1067,6 @@
     
     showInitialSelection();
 </script>
-<script src="script.js"></script>
+<script defer src="script.js"></script>
 </body>
 </html>
