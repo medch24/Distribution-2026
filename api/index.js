@@ -278,4 +278,5 @@ app.post('/deleteMatiereData', async (req, res) => {
   }
 });
 
-module.exports = app;
+// Export handler for Vercel serverless (@vercel/node)
+module.exports = (req, res) => app(req, res);
