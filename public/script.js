@@ -5,37 +5,1498 @@ const standardHeaders = ["Mois", "Semaine", "Date", "Jour", "Unité/Chapitre", "
 const monthAbbreviations = { 'Janvier': 'Janv.', 'Février': 'Févr.', 'Mars': 'Mars', 'Avril': 'Avr.', 'Mai': 'Mai', 'Juin': 'Juin', 'Juillet': 'Juil.', 'Août': 'Août', 'Septembre': 'Sept.', 'Octobre': 'Oct.', 'Novembre': 'Nov.', 'Décembre': 'Déc.' }; 
 const classSubjects = { 'TPS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'MS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'GS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP1': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP2': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP3': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP4': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences humaines', 'Sciences naturelles', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PP5': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI1': ['Langue et littérature', 'Maths', 'Sciences', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI2': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI3': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI4': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI5': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'DP1': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'DP2': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'] };
 const classSessionCounts = {"MS": {"Français": 8, "Maths": 5, "Sciences": 4, "Éducation physique": 2, "Montessori": 2, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "GS": {"Français": 10, "Maths": 5, "Sciences": 5, "Éducation physique": 2, "Informatique": 2, "Montessori": 2, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PP1": {"Français": 8, "Maths": 5, "Anglais": 3, "Sciences Humaines": 3, "Sciences Naturelles": 3, "Éducation physique": 2, "Montessori": 1, "ART": 1, "Informatique": 1, "Musique": 1, "Bibliothèque": 1}, "PP2": {"Français": 8, "Maths": 5, "Anglais": 3, "Sciences Humaines": 3, "Sciences Naturelles": 3, "Éducation physique": 2, "Montessori": 1, "ART": 1, "Informatique": 1, "Musique": 1, "Bibliothèque": 1}, "PP3": {"Français": 8, "Maths": 5, "Anglais": 3, "Sciences Humaines": 3, "Sciences Naturelles": 3, "Éducation physique": 2, "Montessori": 1, "ART": 1, "Informatique": 1, "Musique": 1, "Bibliothèque": 1}, "PP4": {"Français": 9, "Maths": 5, "Anglais": 3, "Sciences Naturelles": 3, "Sciences Humaines": 3, "Éducation physique": 2, "Informatique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PP5": {"Français": 9, "Maths": 5, "Anglais": 3, "Sciences Naturelles": 3, "Sciences Humaines": 3, "Éducation physique": 2, "Informatique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI1": {"Langue et littérature": 6, "Maths": 5, "Sciences": 5, "Individus et Sociétés": 3, "Anglais": 3, "Design": 2, "Éducation physique": 2, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI2": {"Langue et littérature": 5, "Maths": 5, "Individus et Sociétés": 3, "Biologie": 3, "Design": 3, "Physique-chimie": 3, "Anglais": 3, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI3": {"Langue et littérature": 5, "Maths": 5, "Individus et Sociétés": 3, "Biologie": 3, "Design": 3, "Physique-chimie": 3, "Anglais": 3, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI4": {"Langue et littérature": 5, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI5": {"Langue et littérature": 5, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "DP1": {"Langue et littérature": 4, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "DP2": {"Langue et littérature": 4, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1} };
-// Load calendar from server if missing (prevents empty tables on cold start)
-let academicCalendar = [];
-
-// Build a sane default academic calendar if none is provided by the project
-(function ensureCalendar() {
-  if (Array.isArray(academicCalendar) && academicCalendar.length > 0) return;
-  const months = ['Septembre','Octobre','Novembre','Décembre','Janvier','Février','Mars','Avril','Mai','Juin'];
-  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi']; // 5 jours d'école
-  let week = 1;
-  let monthIndex = 0;
-  // 31 semaines d'enseignement, 5 jours chacune
-  for (let w = 0; w < 31; w++) {
-    const month = months[monthIndex];
-    for (let d = 0; d < days.length; d++) {
-      academicCalendar.push({
-        month,
-        week: `Semaine ${week}`,
-        date: '',
-        day: days[d],
-        type: 'Cours'
-      });
-    }
-    week++;
-    // Change month approximately every 4 weeks
-    if ((w + 1) % 4 === 0 && monthIndex < months.length - 1) monthIndex++;
+// Academic calendar 2025-2026: Exact 210-entry calendar from 31/08/2025 to 18/06/2026
+// NO VACATIONS IN NOVEMBER as specified by user
+const academicCalendar = [
+  {
+    "month": "Août",
+    "week": "Semaine 1",
+    "date": "31/08/2025",
+    "day": "Dimanche",
+    "type": "Orientation"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 1",
+    "date": "01/09/2025",
+    "day": "Lundi",
+    "type": "Orientation"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 1",
+    "date": "02/09/2025",
+    "day": "Mardi",
+    "type": "Orientation"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 1",
+    "date": "03/09/2025",
+    "day": "Mercredi",
+    "type": "Orientation"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 1",
+    "date": "04/09/2025",
+    "day": "Jeudi",
+    "type": "Orientation"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 2",
+    "date": "07/09/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 2",
+    "date": "08/09/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 2",
+    "date": "09/09/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 2",
+    "date": "10/09/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 2",
+    "date": "11/09/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 3",
+    "date": "14/09/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 3",
+    "date": "15/09/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 3",
+    "date": "16/09/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 3",
+    "date": "17/09/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 3",
+    "date": "18/09/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 4",
+    "date": "21/09/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 4",
+    "date": "22/09/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 4",
+    "date": "23/09/2025",
+    "day": "Mardi",
+    "type": "Saudi National day"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 4",
+    "date": "24/09/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 4",
+    "date": "25/09/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 5",
+    "date": "28/09/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 5",
+    "date": "29/09/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Septembre",
+    "week": "Semaine 5",
+    "date": "30/09/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 5",
+    "date": "01/10/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 5",
+    "date": "02/10/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 6",
+    "date": "05/10/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 6",
+    "date": "06/10/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 6",
+    "date": "07/10/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 6",
+    "date": "08/10/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 6",
+    "date": "09/10/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 7",
+    "date": "12/10/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 7",
+    "date": "13/10/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 7",
+    "date": "14/10/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 7",
+    "date": "15/10/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 7",
+    "date": "16/10/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 8",
+    "date": "19/10/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 8",
+    "date": "20/10/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 8",
+    "date": "21/10/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 8",
+    "date": "22/10/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 8",
+    "date": "23/10/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 9",
+    "date": "26/10/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 9",
+    "date": "27/10/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 9",
+    "date": "28/10/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 9",
+    "date": "29/10/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Octobre",
+    "week": "Semaine 9",
+    "date": "30/10/2025",
+    "day": "Jeudi",
+    "type": "Evaluation"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 10",
+    "date": "02/11/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 10",
+    "date": "03/11/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 10",
+    "date": "04/11/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 10",
+    "date": "05/11/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 10",
+    "date": "06/11/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 11",
+    "date": "09/11/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 11",
+    "date": "10/11/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 11",
+    "date": "11/11/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 11",
+    "date": "12/11/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 11",
+    "date": "13/11/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 12",
+    "date": "16/11/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 12",
+    "date": "17/11/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 12",
+    "date": "18/11/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 12",
+    "date": "19/11/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 12",
+    "date": "20/11/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 13",
+    "date": "23/11/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 13",
+    "date": "24/11/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 13",
+    "date": "25/11/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 13",
+    "date": "26/11/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 13",
+    "date": "27/11/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Novembre",
+    "week": "Semaine 14",
+    "date": "30/11/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 14",
+    "date": "01/12/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 14",
+    "date": "02/12/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 14",
+    "date": "03/12/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 14",
+    "date": "04/12/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 15",
+    "date": "07/12/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 15",
+    "date": "08/12/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 15",
+    "date": "09/12/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 15",
+    "date": "10/12/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 15",
+    "date": "11/12/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 16",
+    "date": "14/12/2025",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 16",
+    "date": "15/12/2025",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 16",
+    "date": "16/12/2025",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 16",
+    "date": "17/12/2025",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Semaine 16",
+    "date": "18/12/2025",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Décembre",
+    "week": "Examen",
+    "date": "21/12/2025",
+    "day": "Dimanche",
+    "type": "Examen Final 1"
+  },
+  {
+    "month": "Décembre",
+    "week": "Examen",
+    "date": "22/12/2025",
+    "day": "Lundi",
+    "type": "Examen Final 1"
+  },
+  {
+    "month": "Décembre",
+    "week": "Examen",
+    "date": "23/12/2025",
+    "day": "Mardi",
+    "type": "Examen Final 1"
+  },
+  {
+    "month": "Décembre",
+    "week": "Examen",
+    "date": "24/12/2025",
+    "day": "Mercredi",
+    "type": "Examen Final 1"
+  },
+  {
+    "month": "Décembre",
+    "week": "Examen",
+    "date": "25/12/2025",
+    "day": "Jeudi",
+    "type": "Examen Final 1"
+  },
+  {
+    "month": "Décembre",
+    "week": "Vacances",
+    "date": "28/12/2025",
+    "day": "Dimanche",
+    "type": "Vacances"
+  },
+  {
+    "month": "Décembre",
+    "week": "Vacances",
+    "date": "29/12/2025",
+    "day": "Lundi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Décembre",
+    "week": "Vacances",
+    "date": "30/12/2025",
+    "day": "Mardi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Décembre",
+    "week": "Vacances",
+    "date": "31/12/2025",
+    "day": "Mercredi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "01/01/2026",
+    "day": "Jeudi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "04/01/2026",
+    "day": "Dimanche",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "05/01/2026",
+    "day": "Lundi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "06/01/2026",
+    "day": "Mardi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "07/01/2026",
+    "day": "Mercredi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "08/01/2026",
+    "day": "Jeudi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "11/01/2026",
+    "day": "Dimanche",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "12/01/2026",
+    "day": "Lundi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "13/01/2026",
+    "day": "Mardi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "14/01/2026",
+    "day": "Mercredi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Vacances",
+    "date": "15/01/2026",
+    "day": "Jeudi",
+    "type": "Vacances"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 17",
+    "date": "18/01/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 17",
+    "date": "19/01/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 17",
+    "date": "20/01/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 17",
+    "date": "21/01/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 17",
+    "date": "22/01/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 18",
+    "date": "25/01/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 18",
+    "date": "26/01/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 18",
+    "date": "27/01/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 18",
+    "date": "28/01/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Janvier",
+    "week": "Semaine 18",
+    "date": "29/01/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 19",
+    "date": "01/02/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 19",
+    "date": "02/02/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 19",
+    "date": "03/02/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 19",
+    "date": "04/02/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 19",
+    "date": "05/02/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 20",
+    "date": "08/02/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 20",
+    "date": "09/02/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 20",
+    "date": "10/02/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 20",
+    "date": "11/02/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 20",
+    "date": "12/02/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 21",
+    "date": "15/02/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 21",
+    "date": "16/02/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 21",
+    "date": "17/02/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 21",
+    "date": "18/02/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 21",
+    "date": "19/02/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 22",
+    "date": "22/02/2026",
+    "day": "Dimanche",
+    "type": "Saudi foundation day"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 22",
+    "date": "23/02/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 22",
+    "date": "24/02/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 22",
+    "date": "25/02/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Février",
+    "week": "Semaine 22",
+    "date": "26/02/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 23",
+    "date": "01/03/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 23",
+    "date": "02/03/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 23",
+    "date": "03/03/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 23",
+    "date": "04/03/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 23",
+    "date": "05/03/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 24",
+    "date": "08/03/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 24",
+    "date": "09/03/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 24",
+    "date": "10/03/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 24",
+    "date": "11/03/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 24",
+    "date": "12/03/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 25",
+    "date": "15/03/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 25",
+    "date": "16/03/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 25",
+    "date": "17/03/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 25",
+    "date": "18/03/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 25",
+    "date": "19/03/2026",
+    "day": "Jeudi",
+    "type": "Long weekend"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 26",
+    "date": "22/03/2026",
+    "day": "Dimanche",
+    "type": "Long weekend"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 26",
+    "date": "23/03/2026",
+    "day": "Lundi",
+    "type": "Long weekend"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 26",
+    "date": "24/03/2026",
+    "day": "Mardi",
+    "type": "Long weekend"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 26",
+    "date": "25/03/2026",
+    "day": "Mercredi",
+    "type": "Long weekend"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 26",
+    "date": "26/03/2026",
+    "day": "Jeudi",
+    "type": "Long weekend"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 27",
+    "date": "29/03/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 27",
+    "date": "30/03/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mars",
+    "week": "Semaine 27",
+    "date": "31/03/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 27",
+    "date": "01/04/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 27",
+    "date": "02/04/2026",
+    "day": "Jeudi",
+    "type": "Evaluation"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 28",
+    "date": "05/04/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 28",
+    "date": "06/04/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 28",
+    "date": "07/04/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 28",
+    "date": "08/04/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 28",
+    "date": "09/04/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 29",
+    "date": "12/04/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 29",
+    "date": "13/04/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 29",
+    "date": "14/04/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 29",
+    "date": "15/04/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 29",
+    "date": "16/04/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 30",
+    "date": "19/04/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 30",
+    "date": "20/04/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 30",
+    "date": "21/04/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 30",
+    "date": "22/04/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 30",
+    "date": "23/04/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 31",
+    "date": "26/04/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 31",
+    "date": "27/04/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 31",
+    "date": "28/04/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 31",
+    "date": "29/04/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 31",
+    "date": "30/04/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 32",
+    "date": "03/05/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 32",
+    "date": "04/05/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 32",
+    "date": "05/05/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 32",
+    "date": "06/05/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 32",
+    "date": "07/05/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 33",
+    "date": "10/05/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 33",
+    "date": "11/05/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 33",
+    "date": "12/05/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 33",
+    "date": "13/05/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 33",
+    "date": "14/05/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 34",
+    "date": "17/05/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 34",
+    "date": "18/05/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 34",
+    "date": "19/05/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 34",
+    "date": "20/05/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 34",
+    "date": "21/05/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 35",
+    "date": "24/05/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 35",
+    "date": "25/05/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 35",
+    "date": "26/05/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 35",
+    "date": "27/05/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 35",
+    "date": "28/05/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Mai",
+    "week": "Semaine 36",
+    "date": "31/05/2026",
+    "day": "Dimanche",
+    "type": "Cours"
+  },
+  {
+    "month": "Juin",
+    "week": "Semaine 36",
+    "date": "01/06/2026",
+    "day": "Lundi",
+    "type": "Cours"
+  },
+  {
+    "month": "Juin",
+    "week": "Semaine 36",
+    "date": "02/06/2026",
+    "day": "Mardi",
+    "type": "Cours"
+  },
+  {
+    "month": "Juin",
+    "week": "Semaine 36",
+    "date": "03/06/2026",
+    "day": "Mercredi",
+    "type": "Cours"
+  },
+  {
+    "month": "Juin",
+    "week": "Semaine 36",
+    "date": "04/06/2026",
+    "day": "Jeudi",
+    "type": "Cours"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "07/06/2026",
+    "day": "Dimanche",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "08/06/2026",
+    "day": "Lundi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "09/06/2026",
+    "day": "Mardi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "10/06/2026",
+    "day": "Mercredi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "11/06/2026",
+    "day": "Jeudi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "14/06/2026",
+    "day": "Dimanche",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "15/06/2026",
+    "day": "Lundi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "16/06/2026",
+    "day": "Mardi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "17/06/2026",
+    "day": "Mercredi",
+    "type": "Examen Final 2"
+  },
+  {
+    "month": "Juin",
+    "week": "examen",
+    "date": "18/06/2026",
+    "day": "Jeudi",
+    "type": "Examen Final 2"
   }
-})();
+]
+;;
 
 
 const isPlannable = (event) => event && event.type === 'Cours';
-const isSpecialDay = (event) => { if (!event) return false; const type = event.type.toLowerCase(); return type.includes('day') || type.includes('examen') || type.includes('fête') || type.includes('férié') || type.includes('congé') || type.includes('weekend') || type.includes('evaluation'); };
+// Updated to match user specification: Orientation, Evaluation, Long weekend, Saudi National day, Examen Final 1/2, Vacances, Saudi foundation day
+const isSpecialDay = (event) => {
+  if (!event) return false;
+  const type = event.type.toLowerCase();
+  // Match all merged-row event types as specified by user
+  return type.includes('orientation') ||
+         type.includes('evaluation') ||
+         type.includes('long weekend') ||
+         type.includes('weekend') ||
+         type.includes('saudi') ||
+         type.includes('examen') ||
+         type.includes('vacance') ||
+         type.includes('day');
+};
 
 function showErrorMessage(message, duration = 5000) { let errorDiv = document.getElementById('errorMessage'); if (!errorDiv) { errorDiv = document.createElement('div'); errorDiv.id = 'errorMessage'; errorDiv.style.cssText = `position: fixed; top: 20px; right: 20px; background-color: #fde8e8; color: #7f1d1d; padding: 15px; border: 1px solid #fecaca; border-radius: 5px; max-width: 400px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;`; document.body.appendChild(errorDiv); } errorDiv.textContent = message; errorDiv.style.display = 'block'; setTimeout(() => { if (errorDiv) errorDiv.style.display = 'none'; }, duration); }
 function showSuccessMessage(message, duration = 3000) { let successDiv = document.getElementById('successMessage'); if (!successDiv) { successDiv = document.createElement('div'); successDiv.id = 'successMessage'; successDiv.style.cssText = `position: fixed; top: 20px; right: 20px; background-color: #ecfdf5; color: #064e3b; padding: 15px; border: 1px solid #bbf7d0; border-radius: 5px; max-width: 400px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;`; document.body.appendChild(successDiv); } successDiv.textContent = message; successDiv.style.display = 'block'; setTimeout(() => { if (successDiv) successDiv.style.display = 'none'; }, duration); }
@@ -60,7 +1521,21 @@ async function generateWord() { const selectedMatiere = document.getElementById(
 
 async function generateWordZipForClass() { if (!currentClass) { alert("Veuillez d'abord sélectionner une classe."); return; } if (Object.keys(savedData).length === 0) { alert("Les données de la classe ne sont pas encore chargées. Veuillez patienter ou recharger."); return; } showProgressBar(); try { const response = await fetch('https://docs.google.com/document/d/1uFWwBSy4RuF6d5zpy_2nOa43Q4ITm3Bs/export?format=docx'); if (!response.ok) throw new Error("Le modèle Word n'a pas pu être chargé."); const template = await response.arrayBuffer(); const zip = new JSZip(); const subjects = classSubjects[currentClass]; if (!subjects || subjects.length === 0) { throw new Error("Aucune matière n'est définie pour cette classe."); } for (const subject of subjects) { if (savedData[subject] && savedData[subject].length > 1) { try { const templateZip = new PizZip(template); const doc = new docxtemplater(templateZip, { paragraphLoop: true, linebreaks: true, nullGetter: () => "" }); const templateData = prepareWordDataForSubject(subject, savedData[subject], currentClass); doc.render(templateData); const docxBuffer = doc.getZip().generate({ type: 'uint8array' }); zip.file(`${currentClass}_${subject}_Distribution.docx`, docxBuffer); } catch (docError) { console.warn(`Erreur lors de la génération du document pour ${subject}:`, docError); } } } if (Object.keys(zip.files).length > 0) { const content = await zip.generateAsync({ type: "blob" }); saveAs(content, `Distribution_Word_${currentClass}.zip`); showSuccessMessage("Archive ZIP des documents Word générée avec succès!"); } else { alert("Aucun document Word n'a pu être généré. Vérifiez que les matières contiennent des données."); } } catch (error) { console.error('Erreur lors de la génération du ZIP de fichiers Word:', error); showErrorMessage('Une erreur est survenue : ' + error.message); } finally { hideProgressBar(); } }
 
-function generateInitialData(calendar = academicCalendar) { const data = [standardHeaders]; calendar.forEach(event => { const weekLabel = event.week; const newRow = Array(standardHeaders.length).fill(''); newRow[0] = event.month; newRow[1] = weekLabel; newRow[2] = event.date; newRow[3] = event.day; newRow[4] = event.type || 'Cours Normal'; data.push(newRow); }); return data; }
+function generateInitialData(calendar = academicCalendar) { 
+  // ALWAYS use the full academicCalendar (210 entries) to ensure consistency
+  const data = [standardHeaders]; 
+  academicCalendar.forEach(event => { 
+    const weekLabel = event.week; 
+    const newRow = Array(standardHeaders.length).fill(''); 
+    newRow[0] = event.month; 
+    newRow[1] = weekLabel; 
+    newRow[2] = event.date; 
+    newRow[3] = event.day; 
+    newRow[4] = event.type || 'Cours Normal'; 
+    data.push(newRow); 
+  }); 
+  return data; 
+}
 
 function showClasses(section) { document.querySelectorAll('.section-classes').forEach(div => { div.style.display = 'none'; }); document.getElementById(section).style.display = 'block'; }
 function showInitialSelection() { document.getElementById('classView').style.display = 'none'; document.getElementById('initialSelection').style.display = 'block'; currentClass = null; savedData = {}; document.getElementById('matiereSelect').innerHTML = "<option value=''>Sélectionner une matière</option>"; document.getElementById('output').innerHTML = ""; document.getElementById('filterBy').value = ""; document.getElementById('filterOptions').innerHTML = ""; document.getElementById('filterOptions').style.display = 'none'; document.getElementById('showFilledOnly').checked = false; }
@@ -88,13 +1563,50 @@ function toggleFilledRows() { const showFilledOnly = document.getElementById('sh
 function showProgressBar(){const bar=document.getElementById('progressBar');bar.style.display='block';bar.firstElementChild.style.width='10%';}
 function hideProgressBar(){const bar=document.getElementById('progressBar');bar.style.display='none';bar.firstElementChild.style.width='0';}
 
-async function handleDocxImport(event) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez d'abord sélectionner une classe et une matière."); event.target.value = ''; return; } const file = event.target.files[0]; if (!file) return; showProgressBar(); try { const arrayBuf = await file.arrayBuffer(); const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf))); const resp = await apiCall('importDocxAnalyze', { className: currentClass, sheetName: selectedMatiere, fileName: file.name, fileBase64: base64 }); if (resp.success && Array.isArray(resp.sessions)) { const sessions = resp.sessions; const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 5; const slots = []; let counters = {}; savedData[selectedMatiere].slice(1).forEach((row, idx) => { const ev = academicCalendar[idx]; if (!ev) return; const week = ev.week; if (!counters[week]) counters[week] = 0; if (isPlannable(ev)) { if (counters[week] < sessionsPerWeek) { slots.push(row); } counters[week]++; } }); let i = 0; for (const slot of slots) { if (i >= sessions.length) break; const it = sessions[i++]; slot[4] = (it.unite || '').toString(); slot[5] = (it.contenu || '').toString(); slot[6] = (it.ressources_lecon || '').toString(); slot[7] = (it.devoir || '').toString(); slot[8] = (it.ressources_devoir || '').toString(); slot[9] = (it.recherche || '').toString(); slot[10] = (it.projet || '').toString(); } const weekGroups = {}; savedData[selectedMatiere].slice(1).forEach((row, idx) => { const ev = academicCalendar[idx]; if (!ev) return; if (!weekGroups[ev.week]) weekGroups[ev.week] = []; weekGroups[ev.week].push(row); }); Object.keys(weekGroups).forEach(w => { const rows = weekGroups[w]; const last = rows[rows.length - 1]; const lastTheme = rows.map(r => r[4]).filter(Boolean).pop() || selectedMatiere; if (last) { if (!last[9]) last[9] = `Recherche: approfondissement sur ${lastTheme}`; if (!last[10]) last[10] = `Projet: application pratique sur ${lastTheme}`; } }); renderTable(selectedMatiere, savedData[selectedMatiere]); await saveTable(true); showSuccessMessage('Import Word terminé et plan auto-rempli (IA).'); } else { showErrorMessage('Réponse IA invalide.'); } } catch (err) { console.error(err); showErrorMessage('Import DOCX échoué: ' + err.message); } finally { hideProgressBar(); event.target.value = ''; } }
+async function handleDocxImport(event) { 
+  const selectedMatiere = document.getElementById('matiereSelect').value; 
+  if (!currentClass || !selectedMatiere) { 
+    alert("Veuillez d'abord sélectionner une classe et une matière."); 
+    event.target.value = ''; 
+    return; 
+  } 
+  const file = event.target.files[0]; 
+  if (!file) return; 
+  showProgressBar(); 
+  try { 
+    const arrayBuf = await file.arrayBuffer(); 
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf))); 
+    const resp = await apiCall('importDocxAnalyze', { className: currentClass, sheetName: selectedMatiere, fileName: file.name, fileBase64: base64 }); 
+    if (resp.success && Array.isArray(resp.sessions)) { 
+      const sessions = resp.sessions; 
+      const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 5; 
+      
+      // FIX: Ensure savedData matches calendar length before processing
+      if (savedData[selectedMatiere].length !== academicCalendar.length + 1) {
+        console.warn('Calendar mismatch in AI import. Regenerating structure.');
+        savedData[selectedMatiere] = generateInitialData();
+      }
+      
+      const slots = []; 
+      let counters = {}; 
+      savedData[selectedMatiere].slice(1).forEach((row, idx) => { const ev = academicCalendar[idx]; if (!ev) return; const week = ev.week; if (!counters[week]) counters[week] = 0; if (isPlannable(ev)) { if (counters[week] < sessionsPerWeek) { slots.push(row); } counters[week]++; } }); let i = 0; for (const slot of slots) { if (i >= sessions.length) break; const it = sessions[i++]; slot[4] = (it.unite || '').toString(); slot[5] = (it.contenu || '').toString(); slot[6] = (it.ressources_lecon || '').toString(); slot[7] = (it.devoir || '').toString(); slot[8] = (it.ressources_devoir || '').toString(); slot[9] = (it.recherche || '').toString(); slot[10] = (it.projet || '').toString(); } const weekGroups = {}; savedData[selectedMatiere].slice(1).forEach((row, idx) => { const ev = academicCalendar[idx]; if (!ev) return; if (!weekGroups[ev.week]) weekGroups[ev.week] = []; weekGroups[ev.week].push(row); }); Object.keys(weekGroups).forEach(w => { const rows = weekGroups[w]; const last = rows[rows.length - 1]; const lastTheme = rows.map(r => r[4]).filter(Boolean).pop() || selectedMatiere; if (last) { if (!last[9]) last[9] = `Recherche: approfondissement sur ${lastTheme}`; if (!last[10]) last[10] = `Projet: application pratique sur ${lastTheme}`; } }); renderTable(selectedMatiere, savedData[selectedMatiere]); await saveTable(true); showSuccessMessage('Import Word terminé et plan auto-rempli (IA).'); } else { showErrorMessage('Réponse IA invalide.'); } } catch (err) { console.error(err); showErrorMessage('Import DOCX échoué: ' + err.message); } finally { hideProgressBar(); event.target.value = ''; } }
 
 function handleFileUpload(event) { if (!currentClass || !document.getElementById('matiereSelect').value) { alert("Veuillez d'abord sélectionner une classe et une matière."); event.target.value = ''; return; } const file = event.target.files[0]; if (file) { showProgressBar(); const reader = new FileReader(); reader.onload = async (e) => { try { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const firstSheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[firstSheetName]; const importedData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); fillTableWithExcelData(importedData); } catch (error) { console.error("Erreur lors de l'importation du fichier:", error); alert("Une erreur s'est produite lors de la lecture du fichier Excel."); } finally { hideProgressBar(); event.target.value = ''; } }; reader.readAsArrayBuffer(file); } }
 
 function fillTableWithExcelData(importedData) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez d'abord sélectionner une classe et une matière."); return; } const headerOffset = importedData[0]?.[0]?.toLowerCase().includes('unité') || importedData[0]?.[1]?.toLowerCase().includes('contenu') ? 1 : 0; const dataToImport = importedData.slice(headerOffset); const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 0; const availableSlots = []; let sessionCounters = {}; savedData[selectedMatiere].slice(1).forEach((appRow, appRowIndex) => { const event = academicCalendar[appRowIndex]; const weekValue = event.week; if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; if (isPlannable(event)) { if (sessionCounters[weekValue] < sessionsPerWeek) { availableSlots.push(appRow); } sessionCounters[weekValue]++; } }); dataToImport.forEach((importedRow, importIndex) => { if (importIndex < availableSlots.length) { const targetRow = availableSlots[importIndex]; for(let i = 0; i < 7; i++) { targetRow[i + 4] = importedRow[i] || ''; } } }); renderTable(selectedMatiere, savedData[selectedMatiere]); saveTable(true); alert('Importation terminée ! Les données ont été insérées uniquement dans les séances prévues pour cette matière.'); }
 
-function prepareExcelDataForSubject(subjectName) { const sheetData = savedData[subjectName]; if (!sheetData || sheetData.length <= 1) { return null; } const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; let weekMaxSessions = {}; const baseSessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][subjectName]) || 5; sheetData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if (!weekMaxSessions[weekValue]) { const specialDays = sheetData.slice(1).filter((r, i) => { const e = academicCalendar[i]; return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e); }).length; weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays); } if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; const sessionsPerWeek = weekMaxSessions[weekValue]; let seanceValue = ''; if (isPlannable(event)) { if (sessionCounters[weekValue] < sessionsPerWeek) { sessionCounters[weekValue]++; seanceValue = sessionCounters[weekValue]; } else { return; } } if (!isPlannable(event)) { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', '', '', event.type, '', '', '', '', '', '' ]); } else { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', seanceValue, row[4] || '', row[5] || '', row[6] || '', row[7] || '', row[8] || '', row[9] || '', row[10] || '' ]); } }); return dataForExport; }
+function prepareExcelDataForSubject(subjectName) { 
+  const sheetData = savedData[subjectName]; 
+  if (!sheetData || sheetData.length <= 1) { return null; }
+  
+  // FIX: Ensure savedData matches current calendar length (210 entries + 1 header = 211)
+  // If old data exists (155 rows), regenerate with new calendar
+  if (sheetData.length !== academicCalendar.length + 1) {
+    console.warn('Calendar length mismatch detected. Regenerating data structure.');
+    savedData[subjectName] = generateInitialData();
+    return prepareExcelDataForSubject(subjectName); // Recursive call with fixed data
+  }
+   const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; let weekMaxSessions = {}; const baseSessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][subjectName]) || 5; sheetData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if (!weekMaxSessions[weekValue]) { const specialDays = sheetData.slice(1).filter((r, i) => { const e = academicCalendar[i]; return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e); }).length; weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays); } if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; const sessionsPerWeek = weekMaxSessions[weekValue]; let seanceValue = ''; if (isPlannable(event)) { if (sessionCounters[weekValue] < sessionsPerWeek) { sessionCounters[weekValue]++; seanceValue = sessionCounters[weekValue]; } else { return; } } if (!isPlannable(event)) { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', '', '', event.type, '', '', '', '', '', '' ]); } else { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', seanceValue, row[4] || '', row[5] || '', row[6] || '', row[7] || '', row[8] || '', row[9] || '', row[10] || '' ]); } }); return dataForExport; }
 
 function prepareWordDataForSubject(subjectName, subjectData, className) { const data = subjectData.slice(1); const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août'); const calendarForWord = academicCalendar.filter(event => event && event.month !== 'Août'); const dataByWeek = {}; function getWeekNumber(weekString) { const match = weekString.match(/Semaine (\d+)/); return match ? parseInt(match[1], 10) : null; } dataForWord.forEach((row, index) => { const event = calendarForWord[index]; if (!event) return; const week = event.week; const weekNum = getWeekNumber(week); if (weekNum && !dataByWeek[weekNum]) { dataByWeek[weekNum] = { week_name: week, seances: [] }; } }); let sessionCounters = {}; let weekMaxSessions = {}; const baseSessionsPerWeek = (classSessionCounts[className] && classSessionCounts[className][subjectName]) || 5; dataForWord.forEach((row, index) => { const event = calendarForWord[index]; if (!event) return; const week = event.week; const weekNum = getWeekNumber(week); if (!weekNum) return; if (!weekMaxSessions[weekNum]) { const specialDays = calendarForWord.filter((e) => { return e && e.week === week && !isPlannable(e) && isSpecialDay(e); }).length; weekMaxSessions[weekNum] = Math.max(1, baseSessionsPerWeek - specialDays); } if (!sessionCounters[weekNum]) sessionCounters[weekNum] = 0; const isSpecialEvent = !isPlannable(event); const sessionsPerWeek = weekMaxSessions[weekNum]; if (!isSpecialEvent) { const remainingSessions = sessionsPerWeek - sessionCounters[weekNum]; if (remainingSessions > 0) { const remainingDays = calendarForWord.slice(index).filter((e) => { return e && e.week === week && isPlannable(e); }).length; if (remainingDays > 0) { const sessionsThisDay = Math.ceil(remainingSessions / remainingDays); const actualSessions = Math.min(sessionsThisDay, remainingSessions); for (let s = 0; s < actualSessions; s++) { sessionCounters[weekNum]++; const seanceData = { seance_num: sessionCounters[weekNum], chapitre: row[4] || '', contenu_lecon: row[5] || '', res_lecon: row[6] || '', devoir: row[7] || '', res_devoir: row[8] || '', recherche: row[9] || '', projet: row[10] || '' }; dataByWeek[weekNum].seances.push(seanceData); } } } } else { const weekSeances = dataByWeek[weekNum].seances; if (!weekSeances.some(s => s.chapitre === event.type)) { const specialSeance = { seance_num: ' ', chapitre: event.type, contenu_lecon: '', res_lecon: '', devoir: '', res_devoir: '', recherche: '', projet: '' }; dataByWeek[weekNum].seances.push(specialSeance); } } }); const templateData = { class_name: className, subject_name: subjectName }; Object.keys(dataByWeek).forEach(weekNum => { const weekData = dataByWeek[weekNum]; const weekKey = `week${weekNum}`; const sortedSeances = weekData.seances.sort((a, b) => { if (a.seance_num === ' ') return -1; if (b.seance_num === ' ') return 1; return a.seance_num - b.seance_num; }); templateData[`${weekKey}_name`] = weekData.week_name; templateData[`${weekKey}_seances`] = sortedSeances; }); return templateData; }
 
