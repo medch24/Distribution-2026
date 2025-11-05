@@ -11,27 +11,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- La ligne pour socket.io.js a été supprimée d'ici -->
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f5f5f5; color: #333; text-align: center; padding: 20px; }
-        h1 { color: #2a5d9f; font-size: 32px; margin-bottom: 30px; }
-        button { font-size: 18px; margin: 10px 5px; padding: 10px 20px; border: none; background-color: #4CAF50; color: white; cursor: pointer; border-radius: 5px; transition: background-color 0.3s; }
-        button:hover { background-color: #45a049; }
-        .section-classes { display: none; margin-top: 20px; }
-        .section-classes button { margin: 5px; padding: 8px 15px; font-size: 16px; }
-        #initialSelection {}
-        #classView { display: none; margin-top: 30px; text-align: left; }
-        #classView h1 { text-align: center; font-size: 24px; }
-        label, select, input[type="checkbox"] { font-size: 16px; margin: 10px 5px; display: inline-block; vertical-align: middle; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; vertical-align: middle; }
-        button { vertical-align: middle; }
-        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; min-width: 1200px; border-collapse: collapse; margin: 20px 0; background-color: #ffffff; table-layout: fixed; }
-        th, td { padding: 8px; text-align: left; border: 1px solid #ddd; font-size: 12px; word-wrap: break-word; vertical-align: top; }
-        th { background-color: #2a5d9f; color: white; font-weight: bold; position: sticky; top: 0; z-index: 1; }
-        .merged-cell { font-weight: bold; text-align: center; vertical-align: middle; color: #333; }
-        .modifiable-input { width: calc(100% - 16px); min-height: 80px; padding: 8px; border-radius: 5px; resize: vertical; font-size: 12px; box-sizing: border-box; display: block; margin: 0; border: 1px solid #ccc; }
+        :root{
+            --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --primary:#6366f1; --primary-2:#8b5cf6; --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+        }
+        body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%); color: #e5e7eb; text-align: center; padding: 24px; }
+        h1 { color: #e5e7eb; font-size: 30px; margin-bottom: 18px; letter-spacing: .2px; }
+        .card { max-width: 1200px; margin: 0 auto; background: #0b1220; border: 1px solid #1f2937; border-radius: 14px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+        .accent { background: radial-gradient(1200px 1200px at 10% -10%, rgba(99,102,241,.08), transparent), radial-gradient(800px 800px at 90% 10%, rgba(139,92,246,.08), transparent); border-radius: 14px; padding: 4px; }
+        button { font-size: 14px; padding: 10px 14px; border: 1px solid #334155; background: linear-gradient(180deg, #111827, #0b1220); color: #e5e7eb; cursor: pointer; border-radius: 10px; transition: .2s ease; }
+        button:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(99,102,241,.15); border-color: #475569; }
+        .section-classes { display: none; margin-top: 14px; }
+        .section-classes button { margin: 4px; padding: 8px 12px; font-size: 13px; }
+        #classView { display: none; margin-top: 24px; text-align: left; }
+        #classView h1 { text-align: center; font-size: 22px; font-weight: 600; }
+        label, select, input[type="checkbox"] { font-size: 13px; margin: 8px 6px; display: inline-block; vertical-align: middle; }
+        select { padding: 8px; border-radius: 10px; border: 1px solid #334155; background: #0b1220; color: #e5e7eb; }
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #1f2937; border-radius: 10px; }
+        table { width: 100%; min-width: 1200px; border-collapse: collapse; margin: 16px 0; background: #0b1220; table-layout: fixed; }
+        th, td { padding: 10px; text-align: left; border: 1px solid #1f2937; font-size: 12px; word-wrap: break-word; vertical-align: top; }
+        th { background: linear-gradient(180deg, #111827, #0b1220); color: #c7d2fe; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+        .merged-cell { font-weight: 600; text-align: center; vertical-align: middle; color: #e5e7eb; }
+        .modifiable-input { width: calc(100% - 16px); min-height: 76px; padding: 8px; border-radius: 8px; resize: vertical; font-size: 12px; box-sizing: border-box; display: block; margin: 0; border: 1px solid #334155; background: #0f172a; color: #e5e7eb; }
         th:nth-child(1), td:nth-child(1) { width: 45px; } th:nth-child(2), td:nth-child(2) { width: 45px; } th:nth-child(3), td:nth-child(3) { width: 45px; text-align: center; }
-        #progressBar { width: 100%; height: 20px; background-color: #f3f3f3; border: 1px solid #ddd; display: none; position: relative; margin: 20px 0; }
-        #progressBar div { height: 100%; width: 0; background-color: #4CAF50; transition: width 0.4s ease-in-out; }
+        #progressBar { width: 100%; height: 8px; background-color: #0b1220; border: 1px solid #1f2937; display: none; position: relative; margin: 14px 0; border-radius: 999px; overflow: hidden; }
+        #progressBar div { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width 0.4s ease-in-out; }
     </style>
 </head>
 <body>
@@ -62,6 +65,8 @@
         <button onclick="resetCurrentMatiere()" style="background-color: #dc3545;">🔄 Réinitialiser la matière</button>
         <button onclick="document.getElementById('excelUploadInput').click()" style="background-color: #17a2b8;">Importer Excel</button>
         <input type="file" id="excelUploadInput" style="display: none;" onchange="handleFileUpload(event)" accept=".xlsx, .xls">
+        <button onclick="document.getElementById('docxUploadInput').click()" style="background-color: #6f42c1;">Importer Word (IA)</button>
+        <input type="file" id="docxUploadInput" style="display: none;" onchange="handleDocxImport(event)" accept=".docx">
     </div>
     <div>
         <label for="matiereSelect">Choisir une matière :</label>
@@ -754,6 +759,84 @@
     }
     function showProgressBar(){const bar=document.getElementById('progressBar');bar.style.display='block';bar.firstElementChild.style.width='10%';}
     function hideProgressBar(){const bar=document.getElementById('progressBar');bar.style.display='none';bar.firstElementChild.style.width='0';}
+
+    async function handleDocxImport(event) {
+        const selectedMatiere = document.getElementById('matiereSelect').value;
+        if (!currentClass || !selectedMatiere) { alert("Veuillez d'abord sélectionner une classe et une matière."); event.target.value = ''; return; }
+        const file = event.target.files[0];
+        if (!file) return;
+        showProgressBar();
+        try {
+            const arrayBuf = await file.arrayBuffer();
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+            const resp = await apiCall('importDocxAnalyze', {
+                className: currentClass,
+                sheetName: selectedMatiere,
+                fileName: file.name,
+                fileBase64: base64
+            });
+            if (resp.success && Array.isArray(resp.sessions)) {
+                // Injecter les sessions dans la grille actuelle en respectant le calendrier réel et les séances/semaine
+                const sessions = resp.sessions;
+                const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 5;
+                const slots = [];
+                let counters = {};
+                savedData[selectedMatiere].slice(1).forEach((row, idx) => {
+                    const ev = academicCalendar[idx];
+                    if (!ev) return;
+                    const week = ev.week;
+                    if (!counters[week]) counters[week] = 0;
+                    if (isPlannable(ev)) {
+                        if (counters[week] < sessionsPerWeek) {
+                            slots.push(row);
+                        }
+                        counters[week]++;
+                    }
+                });
+                let i = 0;
+                for (const slot of slots) {
+                    if (i >= sessions.length) break;
+                    const it = sessions[i++];
+                    slot[4] = (it.unite || '').toString();
+                    slot[5] = (it.contenu || '').toString();
+                    slot[6] = (it.ressources_lecon || '').toString();
+                    slot[7] = (it.devoir || '').toString();
+                    slot[8] = (it.ressources_devoir || '').toString();
+                    slot[9] = (it.recherche || '').toString();
+                    slot[10] = (it.projet || '').toString();
+                }
+                // Compléter recherche/projet en fin de semaine si vide
+                const weekGroups = {};
+                savedData[selectedMatiere].slice(1).forEach((row, idx) => {
+                    const ev = academicCalendar[idx];
+                    if (!ev) return;
+                    if (!weekGroups[ev.week]) weekGroups[ev.week] = [];
+                    weekGroups[ev.week].push(row);
+                });
+                Object.keys(weekGroups).forEach(w => {
+                    const rows = weekGroups[w];
+                    const last = rows[rows.length - 1];
+                    const lastTheme = rows.map(r => r[4]).filter(Boolean).pop() || selectedMatiere;
+                    if (last) {
+                        if (!last[9]) last[9] = `Recherche: approfondissement sur ${lastTheme}`;
+                        if (!last[10]) last[10] = `Projet: application pratique sur ${lastTheme}`;
+                    }
+                });
+                renderTable(selectedMatiere, savedData[selectedMatiere]);
+                await saveTable(true);
+                showSuccessMessage('Import Word terminé et plan auto-rempli (IA).');
+            } else {
+                showErrorMessage('Réponse IA invalide.');
+            }
+        } catch (err) {
+            console.error(err);
+            showErrorMessage('Import DOCX échoué: ' + err.message);
+        } finally {
+            hideProgressBar();
+            event.target.value = '';
+        }
+    }
+
     function handleFileUpload(event) { if (!currentClass || !document.getElementById('matiereSelect').value) { alert("Veuillez d'abord sélectionner une classe et une matière."); event.target.value = ''; return; } const file = event.target.files[0]; if (file) { showProgressBar(); const reader = new FileReader(); reader.onload = async (e) => { try { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const firstSheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[firstSheetName]; const importedData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); fillTableWithExcelData(importedData); } catch (error) { console.error("Erreur lors de l'importation du fichier:", error); alert("Une erreur s'est produite lors de la lecture du fichier Excel."); } finally { hideProgressBar(); event.target.value = ''; } }; reader.readAsArrayBuffer(file); } }
     function fillTableWithExcelData(importedData) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez d'abord sélectionner une classe et une matière."); return; } const headerOffset = importedData[0]?.[0]?.toLowerCase().includes('unité') || importedData[0]?.[1]?.toLowerCase().includes('contenu') ? 1 : 0; const dataToImport = importedData.slice(headerOffset); const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 0; const availableSlots = []; let sessionCounters = {}; savedData[selectedMatiere].slice(1).forEach((appRow, appRowIndex) => { const event = academicCalendar[appRowIndex]; const weekValue = event.week; if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; if (isPlannable(event)) { if (sessionCounters[weekValue] < sessionsPerWeek) { availableSlots.push(appRow); } sessionCounters[weekValue]++; } }); dataToImport.forEach((importedRow, importIndex) => { if (importIndex < availableSlots.length) { const targetRow = availableSlots[importIndex]; for(let i = 0; i < 7; i++) { targetRow[i + 4] = importedRow[i] || ''; } } }); renderTable(selectedMatiere, savedData[selectedMatiere]); saveTable(true); alert('Importation terminée ! Les données ont été insérées uniquement dans les séances prévues pour cette matière.'); }
     function generateExcel() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière."); return; } const dataForExport = prepareExcelDataForSubject(selectedMatiere); if (!dataForExport) { alert("Pas de données à exporter."); return; } const worksheet = XLSX.utils.aoa_to_sheet(dataForExport); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, selectedMatiere); const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }); saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), `${currentClass}_${selectedMatiere}_Distribution.xlsx`); }
