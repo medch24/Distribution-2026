@@ -14,7 +14,9 @@
     "convertapi": "^1.15.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "mongodb": "^6.5.0"
+    "mongodb": "^6.5.0",
+    "openai": "^4.57.0",
+    "mammoth": "^1.8.0"
   },
   "engines": {
     "node": ">=18.0.0"

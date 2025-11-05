@@ -5,11 +5,14 @@ require('dotenv').config();
 const fs = require('fs').promises;
 const path = require('path');
 const ConvertAPI = require('convertapi');
+const OpenAI = require('openai');
+const mammoth = require('mammoth');
 
 const app = express();
 
 const MONGO_URL = process.env.MONGO_URL;
 const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const classDatabases = {};
 
 // Validation des variables d'environnement critiques
@@ -89,6 +92,139 @@ async function connectToClassDatabase(className) {
 }
 
 // === ROUTES API ===
+
+// ---- DOCX Import + IA helpers ----
+async function extractTextFromDocx(buffer) {
+    try {
+        const result = await mammoth.extractRawText({ buffer });
+        return result.value || '';
+    } catch (e) {
+        console.error('Erreur extraction DOCX:', e.message);
+        return '';
+    }
+}
+
+function buildPromptForSubject(subject, className, plainText) {
+    return `Vous êtes un assistant pédagogique. À partir du texte brut ci-dessous issu d'un document Word (plan de cours/syllabus), générez un plan annuel structuré pour une seule matière.
+
+Contraintes strictes:
+- Sortie attendue: un tableau JSON (Array) nommé sessions, chaque entrée représentant une séance dans l'ordre chronologique.
+- Ne retournez QUE du JSON valide de la forme {"sessions": [...]}, sans texte additionnel.
+- Les clés de chaque objet séance: ["unite", "contenu", "ressources_lecon", "devoir", "ressources_devoir", "recherche", "projet"].
+- Répartissez le contenu par semaine en comblant intelligemment les séances disponibles, sans laisser de vides.
+- Ajoutez pour la fin de CHAQUE semaine: 1 recherche (recherche) et 1 projet (projet) alignés sur le thème étudié.
+- Restez concis, phrases courtes, puces si nécessaire.
+- N'incluez pas de dates; l'app se charge d'assigner aux jours planifiables.
+
+Contexte:
+- Classe: ${className}
+- Matière: ${subject}
+- Texte source (extraits nettoyés):\n${plainText.substring(0, 15000)}\n`;
+}
+
+async function aiPlanFromText(subject, className, plainText) {
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY manquant pour l'analyse IA");
+    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+    const prompt = buildPromptForSubject(subject, className, plainText);
+    const completion = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+            { role: 'system', content: 'Vous êtes un assistant qui renvoie strictement du JSON valide.' },
+            { role: 'user', content: prompt }
+        ],
+        temperature: 0.2
+    });
+    const content = completion.choices?.[0]?.message?.content || '{}';
+    let sessions = [];
+    try {
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed)) sessions = parsed; // au cas où
+        else if (Array.isArray(parsed.sessions)) sessions = parsed.sessions;
+        else if (Array.isArray(parsed.data)) sessions = parsed.data;
+    } catch (e) {
+        console.warn('JSON IA invalide, utilisation d\'un tableau vide');
+        sessions = [];
+    }
+    return sessions;
+}
+
+function fillGridWithSessions(baseGrid, sessions, sessionsPerWeek, sheetName) {
+    const data = baseGrid.map(r => r.slice());
+    const items = sessions || [];
+
+    // Créer groupes par semaine
+    const weeks = {};
+    let currentWeekNum = 0;
+    data.slice(1).forEach((row) => {
+        const weekLabel = row[1];
+        if (weekLabel && weekLabel.startsWith('Semaine ')) {
+            const num = parseInt(weekLabel.replace('Semaine ', ''));
+            currentWeekNum = num;
+        }
+        if (!weeks[currentWeekNum]) weeks[currentWeekNum] = { rows: [], filled: 0 };
+        if (weeks[currentWeekNum].filled < sessionsPerWeek) {
+            weeks[currentWeekNum].rows.push(row);
+            weeks[currentWeekNum].filled++;
+        }
+    });
+
+    // Aplatir slots
+    const slots = [];
+    Object.keys(weeks).forEach(w => weeks[w].rows.forEach(r => slots.push({ week: parseInt(w), rowRef: r })));
+
+    // Distribuer les éléments IA
+    let i = 0;
+    for (const slot of slots) {
+        if (i >= items.length) break;
+        const it = items[i++];
+        slot.rowRef[4] = (it.unite || '').toString();
+        slot.rowRef[5] = (it.contenu || '').toString();
+        slot.rowRef[6] = (it.ressources_lecon || '').toString();
+        slot.rowRef[7] = (it.devoir || '').toString();
+        slot.rowRef[8] = (it.ressources_devoir || '').toString();
+        slot.rowRef[9] = (it.recherche || '').toString();
+        slot.rowRef[10] = (it.projet || '').toString();
+    }
+
+    // Post-traitement: éviter les vides et ajouter recherche/projet fin de semaine
+    Object.keys(weeks).forEach(wk => {
+        const group = weeks[wk];
+        let lastTheme = '';
+        group.rows.forEach(r => { if (r[4]) lastTheme = r[4]; });
+        group.rows.forEach((r, idx) => {
+            if (!r[5]) r[5] = 'Consolidation et pratique guidée';
+            if (!r[7]) r[7] = 'Exercices de consolidation';
+            if (!r[6]) r[6] = 'Manuel, diapos, activités interactives';
+            if (!r[8]) r[8] = 'Lien de ressources, fiche d\'exercices';
+            if (idx === group.rows.length - 1) {
+                if (!r[9]) r[9] = `Recherche: approfondissement du thème ${lastTheme || sheetName}`;
+                if (!r[10]) r[10] = `Projet: mini-projet d\'application sur ${lastTheme || sheetName}`;
+            }
+        });
+    });
+
+    return data;
+}
+
+app.post('/importDocxAnalyze', async (req, res) => {
+    try {
+        const { className, sheetName, fileName, fileBase64 } = req.body;
+        if (!className || !sheetName || !fileBase64) {
+            return res.status(400).json({ success: false, error: 'Paramètres manquants.' });
+        }
+        const buffer = Buffer.from(fileBase64, 'base64');
+        const plainText = await extractTextFromDocx(buffer);
+
+        // Demande à l'IA une liste de séances structurées (sans placement calendrier)
+        const sessions = await aiPlanFromText(sheetName, className, plainText);
+
+        // On renvoie les "sessions" côté front pour distribution selon le calendrier réel
+        res.json({ success: true, sessions });
+    } catch (e) {
+        console.error('Erreur importDocxAnalyze:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
 
 // Route de diagnostic/health check
 app.get('/health', (req, res) => {
