@@ -5,8 +5,9 @@ const standardHeaders = ["Mois", "Semaine", "Date", "Jour", "Unité/Chapitre", "
 const monthAbbreviations = { 'Janvier': 'Janv.', 'Février': 'Févr.', 'Mars': 'Mars', 'Avril': 'Avr.', 'Mai': 'Mai', 'Juin': 'Juin', 'Juillet': 'Juil.', 'Août': 'Août', 'Septembre': 'Sept.', 'Octobre': 'Oct.', 'Novembre': 'Nov.', 'Décembre': 'Déc.' }; 
 const classSubjects = { 'TPS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'MS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'GS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP1': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP2': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP3': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP4': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences humaines', 'Sciences naturelles', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PP5': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI1': ['Langue et littérature', 'Maths', 'Sciences', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI2': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI3': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI4': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI5': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'DP1': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'DP2': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'] };
 const classSessionCounts = {"MS": {"Français": 8, "Maths": 5, "Sciences": 4, "Éducation physique": 2, "Montessori": 2, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "GS": {"Français": 10, "Maths": 5, "Sciences": 5, "Éducation physique": 2, "Informatique": 2, "Montessori": 2, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PP1": {"Français": 8, "Maths": 5, "Anglais": 3, "Sciences Humaines": 3, "Sciences Naturelles": 3, "Éducation physique": 2, "Montessori": 1, "ART": 1, "Informatique": 1, "Musique": 1, "Bibliothèque": 1}, "PP2": {"Français": 8, "Maths": 5, "Anglais": 3, "Sciences Humaines": 3, "Sciences Naturelles": 3, "Éducation physique": 2, "Montessori": 1, "ART": 1, "Informatique": 1, "Musique": 1, "Bibliothèque": 1}, "PP3": {"Français": 8, "Maths": 5, "Anglais": 3, "Sciences Humaines": 3, "Sciences Naturelles": 3, "Éducation physique": 2, "Montessori": 1, "ART": 1, "Informatique": 1, "Musique": 1, "Bibliothèque": 1}, "PP4": {"Français": 9, "Maths": 5, "Anglais": 3, "Sciences Naturelles": 3, "Sciences Humaines": 3, "Éducation physique": 2, "Informatique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PP5": {"Français": 9, "Maths": 5, "Anglais": 3, "Sciences Naturelles": 3, "Sciences Humaines": 3, "Éducation physique": 2, "Informatique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI1": {"Langue et littérature": 6, "Maths": 5, "Sciences": 5, "Individus et Sociétés": 3, "Anglais": 3, "Design": 2, "Éducation physique": 2, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI2": {"Langue et littérature": 5, "Maths": 5, "Individus et Sociétés": 3, "Biologie": 3, "Design": 3, "Physique-chimie": 3, "Anglais": 3, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI3": {"Langue et littérature": 5, "Maths": 5, "Individus et Sociétés": 3, "Biologie": 3, "Design": 3, "Physique-chimie": 3, "Anglais": 3, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI4": {"Langue et littérature": 5, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "PEI5": {"Langue et littérature": 5, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "DP1": {"Langue et littérature": 4, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1}, "DP2": {"Langue et littérature": 4, "Maths": 5, "Biologie": 4, "Physique-chimie": 4, "Anglais": 3, "French second language": 2, "Design": 2, "Individus et Sociétés": 2, "Éducation physique": 1, "Musique": 1, "ART": 1, "Bibliothèque": 1} };
-// Academic calendar 2025-2026: Exact 210-entry calendar from 31/08/2025 to 18/06/2026
-// NO VACATIONS IN NOVEMBER as specified by user
+// Academic Calendar 2025-2026: EXACT 196 entries as specified by user
+// 31 teaching weeks (Semaines 1-31) + exams + vacations
+// NO "Long weekend" - only "Vacance" for vacation periods
 const academicCalendar = [
   {
     "month": "Août",
@@ -223,7 +224,7 @@ const academicCalendar = [
     "week": "Semaine 7",
     "date": "12/10/2025",
     "day": "Dimanche",
-    "type": "Cours"
+    "type": "evaluation"
   },
   {
     "month": "Octobre",
@@ -321,7 +322,7 @@ const academicCalendar = [
     "week": "Semaine 9",
     "date": "30/10/2025",
     "day": "Jeudi",
-    "type": "Evaluation"
+    "type": "Cours"
   },
   {
     "month": "Novembre",
@@ -570,917 +571,915 @@ const academicCalendar = [
   },
   {
     "month": "Décembre",
-    "week": "Examen",
+    "week": "Semaine 17",
     "date": "21/12/2025",
     "day": "Dimanche",
-    "type": "Examen Final 1"
+    "type": "Cours"
   },
   {
     "month": "Décembre",
-    "week": "Examen",
+    "week": "Semaine 17",
     "date": "22/12/2025",
     "day": "Lundi",
-    "type": "Examen Final 1"
+    "type": "Cours"
   },
   {
     "month": "Décembre",
-    "week": "Examen",
+    "week": "Semaine 17",
     "date": "23/12/2025",
     "day": "Mardi",
-    "type": "Examen Final 1"
+    "type": "Cours"
   },
   {
     "month": "Décembre",
-    "week": "Examen",
+    "week": "Semaine 17",
     "date": "24/12/2025",
     "day": "Mercredi",
-    "type": "Examen Final 1"
+    "type": "examen"
   },
   {
     "month": "Décembre",
-    "week": "Examen",
+    "week": "Semaine 17",
     "date": "25/12/2025",
     "day": "Jeudi",
-    "type": "Examen Final 1"
+    "type": "examen"
   },
   {
     "month": "Décembre",
-    "week": "Vacances",
+    "week": "examen",
     "date": "28/12/2025",
     "day": "Dimanche",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Décembre",
-    "week": "Vacances",
+    "week": "examen",
     "date": "29/12/2025",
     "day": "Lundi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Décembre",
-    "week": "Vacances",
+    "week": "examen",
     "date": "30/12/2025",
     "day": "Mardi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Décembre",
-    "week": "Vacances",
+    "week": "examen",
     "date": "31/12/2025",
     "day": "Mercredi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "examen",
     "date": "01/01/2026",
     "day": "Jeudi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "examen",
     "date": "04/01/2026",
     "day": "Dimanche",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "examen",
     "date": "05/01/2026",
     "day": "Lundi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "examen",
     "date": "06/01/2026",
     "day": "Mardi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "examen",
     "date": "07/01/2026",
     "day": "Mercredi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "examen",
     "date": "08/01/2026",
     "day": "Jeudi",
-    "type": "Vacances"
+    "type": "examen"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "Vacance",
     "date": "11/01/2026",
     "day": "Dimanche",
-    "type": "Vacances"
+    "type": "Vacance"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "Vacance",
     "date": "12/01/2026",
     "day": "Lundi",
-    "type": "Vacances"
+    "type": "Vacance"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "Vacance",
     "date": "13/01/2026",
     "day": "Mardi",
-    "type": "Vacances"
+    "type": "Vacance"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "Vacance",
     "date": "14/01/2026",
     "day": "Mercredi",
-    "type": "Vacances"
+    "type": "Vacance"
   },
   {
     "month": "Janvier",
-    "week": "Vacances",
+    "week": "Vacance",
     "date": "15/01/2026",
     "day": "Jeudi",
-    "type": "Vacances"
+    "type": "Vacance"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 17",
+    "week": "Semaine 18",
     "date": "18/01/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 17",
+    "week": "Semaine 18",
     "date": "19/01/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 17",
+    "week": "Semaine 18",
     "date": "20/01/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 17",
+    "week": "Semaine 18",
     "date": "21/01/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 17",
+    "week": "Semaine 18",
     "date": "22/01/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 18",
+    "week": "Semaine 19",
     "date": "25/01/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 18",
+    "week": "Semaine 19",
     "date": "26/01/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 18",
+    "week": "Semaine 19",
     "date": "27/01/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 18",
+    "week": "Semaine 19",
     "date": "28/01/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Janvier",
-    "week": "Semaine 18",
+    "week": "Semaine 19",
     "date": "29/01/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 19",
+    "week": "Semaine 20",
     "date": "01/02/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 19",
+    "week": "Semaine 20",
     "date": "02/02/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 19",
+    "week": "Semaine 20",
     "date": "03/02/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 19",
+    "week": "Semaine 20",
     "date": "04/02/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 19",
+    "week": "Semaine 20",
     "date": "05/02/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 20",
+    "week": "Semaine 21",
     "date": "08/02/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 20",
+    "week": "Semaine 21",
     "date": "09/02/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 20",
+    "week": "Semaine 21",
     "date": "10/02/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 20",
+    "week": "Semaine 21",
     "date": "11/02/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 20",
+    "week": "Semaine 21",
     "date": "12/02/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 21",
+    "week": "Semaine 22",
     "date": "15/02/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 21",
+    "week": "Semaine 22",
     "date": "16/02/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 21",
+    "week": "Semaine 22",
     "date": "17/02/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 21",
+    "week": "Semaine 22",
     "date": "18/02/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 21",
+    "week": "Semaine 22",
     "date": "19/02/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 22",
+    "week": "Semaine 23",
     "date": "22/02/2026",
     "day": "Dimanche",
-    "type": "Saudi foundation day"
+    "type": "Saudi Fondation Day"
   },
   {
     "month": "Février",
-    "week": "Semaine 22",
+    "week": "Semaine 23",
     "date": "23/02/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 22",
+    "week": "Semaine 23",
     "date": "24/02/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 22",
+    "week": "Semaine 23",
     "date": "25/02/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Février",
-    "week": "Semaine 22",
+    "week": "Semaine 23",
     "date": "26/02/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 23",
+    "week": "Semaine 24",
     "date": "01/03/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 23",
+    "week": "Semaine 24",
     "date": "02/03/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 23",
+    "week": "Semaine 24",
     "date": "03/03/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 23",
+    "week": "Semaine 24",
     "date": "04/03/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 23",
+    "week": "Semaine 24",
     "date": "05/03/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 24",
+    "week": "Vacance",
     "date": "08/03/2026",
     "day": "Dimanche",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 24",
+    "week": "Vacance",
     "date": "09/03/2026",
     "day": "Lundi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 24",
+    "week": "Vacance",
     "date": "10/03/2026",
     "day": "Mardi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 24",
+    "week": "Vacance",
     "date": "11/03/2026",
     "day": "Mercredi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 24",
+    "week": "Vacance",
     "date": "12/03/2026",
     "day": "Jeudi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 25",
+    "week": "Vacance",
     "date": "15/03/2026",
     "day": "Dimanche",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 25",
+    "week": "Vacance",
     "date": "16/03/2026",
     "day": "Lundi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 25",
+    "week": "Vacance",
     "date": "17/03/2026",
     "day": "Mardi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mars",
-    "week": "Semaine 25",
+    "week": "Vacance",
     "date": "18/03/2026",
     "day": "Mercredi",
-    "type": "Cours"
+    "type": "Vacance"
+  },
+  {
+    "month": "Mars",
+    "week": "Vacance",
+    "date": "19/03/2026",
+    "day": "Jeudi",
+    "type": "Vacance"
+  },
+  {
+    "month": "Mars",
+    "week": "Vacance",
+    "date": "22/03/2026",
+    "day": "Dimanche",
+    "type": "Vacance"
+  },
+  {
+    "month": "Mars",
+    "week": "Vacance",
+    "date": "23/03/2026",
+    "day": "Lundi",
+    "type": "Vacance"
+  },
+  {
+    "month": "Mars",
+    "week": "Vacance",
+    "date": "24/03/2026",
+    "day": "Mardi",
+    "type": "Vacance"
+  },
+  {
+    "month": "Mars",
+    "week": "Vacance",
+    "date": "25/03/2026",
+    "day": "Mercredi",
+    "type": "Vacance"
+  },
+  {
+    "month": "Mars",
+    "week": "Vacance",
+    "date": "26/03/2026",
+    "day": "Jeudi",
+    "type": "Vacance"
   },
   {
     "month": "Mars",
     "week": "Semaine 25",
-    "date": "19/03/2026",
-    "day": "Jeudi",
-    "type": "Long weekend"
-  },
-  {
-    "month": "Mars",
-    "week": "Semaine 26",
-    "date": "22/03/2026",
-    "day": "Dimanche",
-    "type": "Long weekend"
-  },
-  {
-    "month": "Mars",
-    "week": "Semaine 26",
-    "date": "23/03/2026",
-    "day": "Lundi",
-    "type": "Long weekend"
-  },
-  {
-    "month": "Mars",
-    "week": "Semaine 26",
-    "date": "24/03/2026",
-    "day": "Mardi",
-    "type": "Long weekend"
-  },
-  {
-    "month": "Mars",
-    "week": "Semaine 26",
-    "date": "25/03/2026",
-    "day": "Mercredi",
-    "type": "Long weekend"
-  },
-  {
-    "month": "Mars",
-    "week": "Semaine 26",
-    "date": "26/03/2026",
-    "day": "Jeudi",
-    "type": "Long weekend"
-  },
-  {
-    "month": "Mars",
-    "week": "Semaine 27",
     "date": "29/03/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 27",
+    "week": "Semaine 25",
     "date": "30/03/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Mars",
-    "week": "Semaine 27",
+    "week": "Semaine 25",
     "date": "31/03/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 27",
+    "week": "Semaine 25",
     "date": "01/04/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 27",
+    "week": "Semaine 25",
     "date": "02/04/2026",
     "day": "Jeudi",
-    "type": "Evaluation"
-  },
-  {
-    "month": "Avril",
-    "week": "Semaine 28",
-    "date": "05/04/2026",
-    "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 28",
+    "week": "Semaine 26",
+    "date": "05/04/2026",
+    "day": "Dimanche",
+    "type": "evaluation"
+  },
+  {
+    "month": "Avril",
+    "week": "Semaine 26",
     "date": "06/04/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 28",
+    "week": "Semaine 26",
     "date": "07/04/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 28",
+    "week": "Semaine 26",
     "date": "08/04/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 28",
+    "week": "Semaine 26",
     "date": "09/04/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 29",
+    "week": "Semaine 27",
     "date": "12/04/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 29",
+    "week": "Semaine 27",
     "date": "13/04/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 29",
+    "week": "Semaine 27",
     "date": "14/04/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 29",
+    "week": "Semaine 27",
     "date": "15/04/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 29",
+    "week": "Semaine 27",
     "date": "16/04/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 30",
+    "week": "Semaine 28",
     "date": "19/04/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 30",
+    "week": "Semaine 28",
     "date": "20/04/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 30",
+    "week": "Semaine 28",
     "date": "21/04/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 30",
+    "week": "Semaine 28",
     "date": "22/04/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 30",
+    "week": "Semaine 28",
     "date": "23/04/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 31",
+    "week": "Semaine 29",
     "date": "26/04/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 31",
+    "week": "Semaine 29",
     "date": "27/04/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 31",
+    "week": "Semaine 29",
     "date": "28/04/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 31",
+    "week": "Semaine 29",
     "date": "29/04/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Avril",
-    "week": "Semaine 31",
+    "week": "Semaine 29",
     "date": "30/04/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 32",
+    "week": "Semaine 30",
     "date": "03/05/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 32",
+    "week": "Semaine 30",
     "date": "04/05/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 32",
+    "week": "Semaine 30",
     "date": "05/05/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 32",
+    "week": "Semaine 30",
     "date": "06/05/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 32",
+    "week": "Semaine 30",
     "date": "07/05/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 33",
+    "week": "Semaine 31",
     "date": "10/05/2026",
     "day": "Dimanche",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 33",
+    "week": "Semaine 31",
     "date": "11/05/2026",
     "day": "Lundi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 33",
+    "week": "Semaine 31",
     "date": "12/05/2026",
     "day": "Mardi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 33",
+    "week": "Semaine 31",
     "date": "13/05/2026",
     "day": "Mercredi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 33",
+    "week": "Semaine 31",
     "date": "14/05/2026",
     "day": "Jeudi",
     "type": "Cours"
   },
   {
     "month": "Mai",
-    "week": "Semaine 34",
+    "week": "Vacance",
     "date": "17/05/2026",
     "day": "Dimanche",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 34",
+    "week": "Vacance",
     "date": "18/05/2026",
     "day": "Lundi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 34",
+    "week": "Vacance",
     "date": "19/05/2026",
     "day": "Mardi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 34",
+    "week": "Vacance",
     "date": "20/05/2026",
     "day": "Mercredi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 34",
+    "week": "Vacance",
     "date": "21/05/2026",
     "day": "Jeudi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 35",
+    "week": "Vacance",
     "date": "24/05/2026",
     "day": "Dimanche",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 35",
+    "week": "Vacance",
     "date": "25/05/2026",
     "day": "Lundi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 35",
+    "week": "Vacance",
     "date": "26/05/2026",
     "day": "Mardi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 35",
+    "week": "Vacance",
     "date": "27/05/2026",
     "day": "Mercredi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 35",
+    "week": "Vacance",
     "date": "28/05/2026",
     "day": "Jeudi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Mai",
-    "week": "Semaine 36",
+    "week": "Vacance",
     "date": "31/05/2026",
     "day": "Dimanche",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Juin",
-    "week": "Semaine 36",
+    "week": "Vacance",
     "date": "01/06/2026",
     "day": "Lundi",
-    "type": "Cours"
+    "type": "Vacance"
   },
   {
     "month": "Juin",
-    "week": "Semaine 36",
+    "week": "examen",
     "date": "02/06/2026",
     "day": "Mardi",
-    "type": "Cours"
+    "type": "examen"
   },
   {
     "month": "Juin",
-    "week": "Semaine 36",
+    "week": "examen",
     "date": "03/06/2026",
     "day": "Mercredi",
-    "type": "Cours"
+    "type": "examen"
   },
   {
     "month": "Juin",
-    "week": "Semaine 36",
+    "week": "examen",
     "date": "04/06/2026",
     "day": "Jeudi",
-    "type": "Cours"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "07/06/2026",
     "day": "Dimanche",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "08/06/2026",
     "day": "Lundi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "09/06/2026",
     "day": "Mardi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "10/06/2026",
     "day": "Mercredi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "11/06/2026",
     "day": "Jeudi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "14/06/2026",
     "day": "Dimanche",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "15/06/2026",
     "day": "Lundi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "16/06/2026",
     "day": "Mardi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "17/06/2026",
     "day": "Mercredi",
-    "type": "Examen Final 2"
+    "type": "examen"
   },
   {
     "month": "Juin",
     "week": "examen",
     "date": "18/06/2026",
     "day": "Jeudi",
-    "type": "Examen Final 2"
+    "type": "examen"
   }
-]
-;;
-
+];
 
 const isPlannable = (event) => event && event.type === 'Cours';
 // Updated to match user specification: Orientation, Evaluation, Long weekend, Saudi National day, Examen Final 1/2, Vacances, Saudi foundation day
