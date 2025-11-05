@@ -5,11 +5,13 @@ require('dotenv').config();
 const fs = require('fs').promises;
 const path = require('path');
 const ConvertAPI = require('convertapi');
+const OpenAI = require('openai');
 
 const app = express();
 
 const MONGO_URL = process.env.MONGO_URL;
 const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const classDatabases = {};
 
 // Validation des variables d'environnement critiques
