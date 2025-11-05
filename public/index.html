@@ -11,33 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- La ligne pour socket.io.js a été supprimée d'ici -->
     <link rel="stylesheet" href="styles.css">
-    <style>
-        :root{
-            --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --primary:#6366f1; --primary-2:#8b5cf6; --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
-        }
-        body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%); color: #e5e7eb; text-align: center; padding: 24px; }
-        h1 { color: #e5e7eb; font-size: 30px; margin-bottom: 18px; letter-spacing: .2px; }
-        .card { max-width: 1200px; margin: 0 auto; background: #0b1220; border: 1px solid #1f2937; border-radius: 14px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
-        .accent { background: radial-gradient(1200px 1200px at 10% -10%, rgba(99,102,241,.08), transparent), radial-gradient(800px 800px at 90% 10%, rgba(139,92,246,.08), transparent); border-radius: 14px; padding: 4px; }
-        button { font-size: 14px; padding: 10px 14px; border: 1px solid #334155; background: linear-gradient(180deg, #111827, #0b1220); color: #e5e7eb; cursor: pointer; border-radius: 10px; transition: .2s ease; }
-        button:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(99,102,241,.15); border-color: #475569; }
-        .section-classes { display: none; margin-top: 14px; }
-        .section-classes button { margin: 4px; padding: 8px 12px; font-size: 13px; }
-        #classView { display: none; margin-top: 24px; text-align: left; }
-        #classView h1 { text-align: center; font-size: 22px; font-weight: 600; }
-        label, select, input[type="checkbox"] { font-size: 13px; margin: 8px 6px; display: inline-block; vertical-align: middle; }
-        select { padding: 8px; border-radius: 10px; border: 1px solid #334155; background: #0b1220; color: #e5e7eb; }
-        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #1f2937; border-radius: 10px; }
-        table { width: 100%; min-width: 1200px; border-collapse: collapse; margin: 16px 0; background: #0b1220; table-layout: fixed; }
-        th, td { padding: 10px; text-align: left; border: 1px solid #1f2937; font-size: 12px; word-wrap: break-word; vertical-align: top; }
-        th { background: linear-gradient(180deg, #111827, #0b1220); color: #c7d2fe; font-weight: 600; position: sticky; top: 0; z-index: 1; }
-        .merged-cell { font-weight: 600; text-align: center; vertical-align: middle; color: #e5e7eb; }
-        .modifiable-input { width: calc(100% - 16px); min-height: 76px; padding: 8px; border-radius: 8px; resize: vertical; font-size: 12px; box-sizing: border-box; display: block; margin: 0; border: 1px solid #334155; background: #0f172a; color: #e5e7eb; }
-        th:nth-child(1), td:nth-child(1) { width: 45px; } th:nth-child(2), td:nth-child(2) { width: 45px; } th:nth-child(3), td:nth-child(3) { width: 45px; text-align: center; }
-        #progressBar { width: 100%; height: 8px; background-color: #0b1220; border: 1px solid #1f2937; display: none; position: relative; margin: 14px 0; border-radius: 999px; overflow: hidden; }
-        #progressBar div { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width 0.4s ease-in-out; }
-    </style>
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
 <div id="initialSelection">
@@ -57,17 +31,17 @@
 </div>
 <div id="classView" style="display: none;">
     <h1 id="classTitle"></h1>
-    <button onclick="showInitialSelection()" style="background-color: #6c757d;">Changer de Classe</button>
+    <button onclick="showInitialSelection()" class="secondary"><i class="ri-arrow-go-back-line"></i> Changer de Classe</button>
     <div class="button-container" style="margin-bottom: 20px; margin-top: 10px;">
-        <button onclick="generateExcel()">Générer Excel (Matière)</button>
-        <button onclick="generateWord()">Générer Word (Matière)</button>
-        <button onclick="generateExcelZipForClass()">Générer Excel (ZIP par Classe)</button>
-        <button onclick="generateWordZipForClass()">Générer Word (ZIP par Classe)</button>
-        <button onclick="saveTable()">Enregistrer les modifications</button>
-        <button onclick="resetCurrentMatiere()" style="background-color: #dc3545;">🔄 Réinitialiser la matière</button>
-        <button onclick="document.getElementById('excelUploadInput').click()" style="background-color: #17a2b8;">Importer Excel</button>
+        <button onclick="generateExcel()" class="primary"><i class="ri-file-excel-2-line"></i> Générer Excel (Matière)</button>
+        <button onclick="generateWord()" class="primary"><i class="ri-file-word-2-line"></i> Générer Word (Matière)</button>
+        <button onclick="generateExcelZipForClass()" class="secondary"><i class="ri-archive-2-line"></i> Excel (ZIP par Classe)</button>
+        <button onclick="generateWordZipForClass()" class="secondary"><i class="ri-archive-stack-line"></i> Word (ZIP par Classe)</button>
+        <button onclick="saveTable()" class="primary"><i class="ri-save-3-line"></i> Enregistrer</button>
+        <button onclick="resetCurrentMatiere()" class="danger"><i class="ri-refresh-line"></i> Réinitialiser la matière</button>
+        <button onclick="document.getElementById('excelUploadInput').click()" class="info"><i class="ri-upload-2-line"></i> Importer Excel</button>
         <input type="file" id="excelUploadInput" style="display: none;" onchange="handleFileUpload(event)" accept=".xlsx, .xls">
-        <button onclick="document.getElementById('docxUploadInput').click()" style="background-color: #6f42c1;">Importer Word (IA)</button>
+        <button onclick="document.getElementById('docxUploadInput').click()" class="info"><i class="ri-brain-line"></i> Importer Word (IA)</button>
         <input type="file" id="docxUploadInput" style="display: none;" onchange="handleDocxImport(event)" accept=".docx">
     </div>
     <div>
@@ -82,7 +56,7 @@
             <option value="Semaine">Semaine</option>
         </select>
         <select id="filterOptions" onchange="applyFilter()" style="display: none;"></select>
-        <button onclick="clearFilter()" style="background-color: #ffc107;">Annuler le filtre</button>
+        <button onclick="clearFilter()" class="warning"><i class="ri-filter-off-line"></i> Annuler le filtre</button>
         <label style="margin-left: 20px;"><input type="checkbox" id="showFilledOnly" onclick="toggleFilledRows()"> Afficher uniquement les lignes remplies</label>
     </div>
     <div id="progressBar"><div></div></div>
