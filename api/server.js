@@ -93,6 +93,55 @@ async function connectToClassDatabase(className) {
 
 // === ROUTES API ===
 
+// ---- SSE (auto-refresh + présence) ----
+const sseClients = new Set();
+function broadcast(event, payload) {
+    const data = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+    for (const res of sseClients) {
+        try { res.write(data); } catch (_) {}
+    }
+}
+
+// présence en mémoire { key: { userId: timestamp, ... } }, key = class:subject
+const presence = {};
+function cleanupPresence() {
+    const now = Date.now();
+    for (const key of Object.keys(presence)) {
+        for (const uid of Object.keys(presence[key])) {
+            if (now - presence[key][uid] > 30000) { // 30s TTL
+                delete presence[key][uid];
+            }
+        }
+        if (Object.keys(presence[key]).length === 0) delete presence[key];
+    }
+}
+setInterval(() => { cleanupPresence(); }, 10000);
+
+app.get('/events', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders && res.flushHeaders();
+    res.write(`event: ping\ndata: ${JSON.stringify({ ts: Date.now() })}\n\n`);
+    sseClients.add(res);
+    req.on('close', () => { sseClients.delete(res); });
+});
+
+app.post('/presence/heartbeat', (req, res) => {
+    try {
+        const { className, sheetName, userId } = req.body || {};
+        if (!className || !sheetName || !userId) return res.status(400).json({ success: false });
+        const key = `${className}:${sheetName}`;
+        if (!presence[key]) presence[key] = {};
+        presence[key][userId] = Date.now();
+        const count = Object.keys(presence[key]).length;
+        broadcast('presence', { key, count, ts: Date.now() });
+        res.json({ success: true, count });
+    } catch (e) {
+        res.status(500).json({ success: false });
+    }
+});
+
 // ---- DOCX Import + IA helpers ----
 async function extractTextFromDocx(buffer) {
     try {
@@ -354,6 +403,9 @@ app.post('/saveTable', async (req, res) => {
         const allTablesData = await db.collection('tables').find().toArray();
         const formattedTables = allTablesData.map(table => ({ matiere: table.sheetName, data: table.data }));
         await db.collection('savedCopies').insertOne({ timestamp: new Date(), tables: formattedTables });
+        
+        // Notifier tous les clients pour déclencher un refresh
+        broadcast('refresh', { className, sheetName, ts: Date.now() });
         
         res.json({ success: true });
     } catch (error) {
