@@ -404,4 +404,66 @@ function normalizeSavedDataForSubject(subjectName){
     }
   });
 }
+
+// === FONCTIONS DE GÉNÉRATION EXCEL ===
+function generateExcel() {
+  const selectedMatiere = document.getElementById('matiereSelect').value;
+  if (!currentClass || !selectedMatiere) {
+    alert("Veuillez sélectionner une classe et une matière.");
+    return;
+  }
+  const dataForExport = prepareExcelDataForSubject(selectedMatiere);
+  if (!dataForExport) {
+    alert("Pas de données à exporter.");
+    return;
+  }
+  const worksheet = XLSX.utils.aoa_to_sheet(dataForExport);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, selectedMatiere);
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), `${currentClass}_${selectedMatiere}_Distribution.xlsx`);
+  showSuccessMessage("Fichier Excel généré avec succès!");
+}
+
+async function generateExcelZipForClass() {
+  if (!currentClass) {
+    alert("Veuillez d'abord sélectionner une classe.");
+    return;
+  }
+  if (Object.keys(savedData).length === 0) {
+    alert("Les données de la classe ne sont pas encore chargées. Veuillez patienter ou recharger.");
+    return;
+  }
+  showProgressBar();
+  try {
+    const zip = new JSZip();
+    const subjects = classSubjects[currentClass];
+    if (!subjects || subjects.length === 0) {
+      throw new Error("Aucune matière n'est définie pour cette classe.");
+    }
+    for (const subject of subjects) {
+      const dataForExport = prepareExcelDataForSubject(subject);
+      if (dataForExport) {
+        const worksheet = XLSX.utils.aoa_to_sheet(dataForExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, subject);
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        zip.file(`${currentClass}_${subject}_Distribution.xlsx`, excelBuffer);
+      }
+    }
+    if (Object.keys(zip.files).length > 0) {
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `Distribution_Excel_${currentClass}.zip`);
+      showSuccessMessage("Archive ZIP des fichiers Excel générée avec succès!");
+    } else {
+      alert("Aucun document Excel n'a pu être généré. Vérifiez que les matières contiennent des données.");
+    }
+  } catch (error) {
+    console.error('Erreur lors de la génération du ZIP de fichiers Excel:', error);
+    showErrorMessage('Une erreur est survenue : ' + error.message);
+  } finally {
+    hideProgressBar();
+  }
+}
+
 showInitialSelection();
