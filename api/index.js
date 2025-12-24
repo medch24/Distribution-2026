@@ -15,6 +15,7 @@ const MONGO_URL = process.env.MONGO_URL;
 const CONVERTAPI_SECRET = process.env.CONVERTAPI_SECRET;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const classDatabases = {};
 
 // --- Utils ---
@@ -126,6 +127,7 @@ app.get('/health', (req, res) => {
       convertapi_configured: !!CONVERTAPI_SECRET,
       openai_configured: !!OPENAI_API_KEY,
       groq_configured: !!GROQ_API_KEY,
+      gemini_configured: !!GEMINI_API_KEY,
     },
     services: { pdf_conversion: !!convertapi ? 'ready' : 'not_available' },
   });
@@ -320,6 +322,127 @@ app.post('/deleteMatiereData', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: 'Erreur serveur lors de la suppression.' });
+  }
+});
+
+// === Distribution Automatique avec Gemini ===
+function buildPromptForGemini(subject, className, manuelSummary, cahierSummary) {
+  return `Tu es un assistant pédagogique expert. À partir des sommaires du livre manuel et du cahier d'activité fournis ci-dessous, génère un plan annuel structuré et complet pour la matière "${subject}" en classe ${className}.
+
+CONTRAINTES STRICTES:
+1. Sortie attendue: un tableau JSON (Array) nommé "sessions", chaque entrée représentant UNE séance dans l'ordre chronologique
+2. Retourne UNIQUEMENT du JSON valide de la forme {"sessions": [...]}, sans texte additionnel
+3. Chaque objet séance doit contenir ces clés: ["unite", "contenu", "ressources_lecon", "devoir", "ressources_devoir", "recherche", "projet"]
+4. Répartis intelligemment le contenu sur TOUTE l'année scolaire (environ 150-180 séances selon la matière)
+5. Respecte la progression logique: manuel d'abord, puis exercices du cahier correspondants
+6. Pour chaque SEMAINE (environ 5 séances), ajoute:
+   - "recherche": une activité de recherche liée au thème de la semaine
+   - "projet": un mini-projet d'application pratique
+7. Sois concis: phrases courtes, puces si nécessaire
+8. Ne mets PAS de dates - l'application les assignera automatiquement
+
+SOMMAIRE DU LIVRE MANUEL:
+${manuelSummary}
+
+SOMMAIRE DU CAHIER D'ACTIVITÉ:
+${cahierSummary}
+
+Génère maintenant le JSON avec toutes les séances pour couvrir l'année complète en alternant contenu théorique (manuel) et pratique (cahier).`;
+}
+
+async function callGeminiAPI(subject, className, manuelSummary, cahierSummary) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY non configurée');
+  }
+  
+  const prompt = buildPromptForGemini(subject, className, manuelSummary, cahierSummary);
+  
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 8000,
+          }
+        })
+      }
+    );
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    
+    // Nettoyer le JSON potentiellement entouré de markdown
+    let cleanText = text.trim();
+    if (cleanText.startsWith('```json')) {
+      cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    try {
+      const parsed = JSON.parse(cleanText);
+      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed.sessions)) return parsed.sessions;
+      if (Array.isArray(parsed.data)) return parsed.data;
+      return [];
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      console.error('Raw text:', text);
+      return [];
+    }
+  } catch (error) {
+    console.error('Gemini API call error:', error);
+    throw error;
+  }
+}
+
+app.post('/generateAIDistributionGemini', async (req, res) => {
+  try {
+    const { className, sheetName, manuelSummary, cahierSummary } = req.body || {};
+    
+    if (!className || !sheetName || !manuelSummary || !cahierSummary) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Paramètres manquants (classe, matière, sommaire manuel, sommaire cahier requis).' 
+      });
+    }
+    
+    // Vérifier que c'est une classe éligible
+    if (!['PEI1', 'PEI2', 'PEI3', 'PEI4', 'DP2'].includes(className)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cette fonctionnalité est disponible uniquement pour PEI1, PEI2, PEI3, PEI4 et DP2.'
+      });
+    }
+    
+    const sessions = await callGeminiAPI(sheetName, className, manuelSummary, cahierSummary);
+    
+    if (!sessions || sessions.length === 0) {
+      return res.status(500).json({
+        success: false,
+        error: 'L\'IA n\'a pas pu générer de sessions valides. Veuillez vérifier les sommaires.'
+      });
+    }
+    
+    res.json({ success: true, sessions });
+  } catch (error) {
+    console.error('Error in generateAIDistributionGemini:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: `Erreur lors de la génération IA: ${error.message}` 
+    });
   }
 });
 
