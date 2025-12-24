@@ -95,10 +95,37 @@ app.get('/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable buffering for SSE
   res.flushHeaders && res.flushHeaders();
+  
+  // Send initial ping
   res.write(`event: ping\ndata: ${JSON.stringify({ ts: Date.now() })}\n\n`);
   sseClients.add(res);
-  req.on('close', () => sseClients.delete(res));
+  
+  // Send keepalive every 30 seconds to prevent timeout
+  const keepaliveInterval = setInterval(() => {
+    try {
+      res.write(`:keepalive ${Date.now()}\n\n`);
+    } catch (e) {
+      clearInterval(keepaliveInterval);
+      sseClients.delete(res);
+    }
+  }, 30000);
+  
+  // Cleanup on close
+  req.on('close', () => {
+    clearInterval(keepaliveInterval);
+    sseClients.delete(res);
+  });
+  
+  // Auto-close after 5 minutes to prevent long-running connections on Vercel
+  setTimeout(() => {
+    try {
+      clearInterval(keepaliveInterval);
+      sseClients.delete(res);
+      res.end();
+    } catch (e) {}
+  }, 300000);
 });
 
 app.post('/presence/heartbeat', (req, res) => {
