@@ -240,9 +240,16 @@ function showSuccessMessage(message, duration = 3000) { let successDiv = documen
 
 async function apiCall(endpoint, payload) { try { const response = await fetch(`/api/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), }); if (!response.ok) { let errorMessage = `Erreur du serveur: ${response.status}`; try { const errorData = await response.json(); errorMessage = errorData.error || errorMessage; } catch (parseError) { errorMessage = response.statusText || errorMessage; } throw new Error(errorMessage); } if (endpoint === 'generatePdfOnServer') { return response.blob(); } return response.json(); } catch (error) { console.error(`Erreur API pour ${endpoint}:`, error); showErrorMessage(`Erreur: ${error.message}`); throw error; } }
 
-function initSSE() { if (sse) return; try { sse = new EventSource('/api/events'); sse.addEventListener('refresh', (ev) => { try { const data = JSON.parse(ev.data || '{}'); if (!currentClass) return; location.reload(); } catch(_) {} }); sse.addEventListener('presence', (ev) => { try { const data = JSON.parse(ev.data || '{}'); if (data && presenceKey && data.key === presenceKey) { const bar = document.getElementById('presenceBar'); if (bar) { const others = Math.max(0, (data.count || 0)); bar.textContent = others > 1 ? `${others} utilisateurs dans cette matière` : (others === 1 ? `1 utilisateur dans cette matière` : ''); bar.style.display = others > 0 ? 'block' : 'none'; } } } catch(_) {} }); } catch (_) {} }
+function initSSE() { if (sse) return; try { sse = new EventSource('/api/events'); sse.addEventListener('refresh', (ev) => { try { const data = JSON.parse(ev.data || '{}'); if (!currentClass) return; // Ne pas rafraîchir automatiquement - montrer juste une notification showSuccessMessage("Des modifications ont été effectuées par un autre utilisateur.", 3000); } catch(_) {} }); sse.addEventListener('presence', (ev) => { try { const data = JSON.parse(ev.data || '{}'); if (data && presenceKey && data.key === presenceKey) { const bar = document.getElementById('presenceBar'); if (bar) { const others = Math.max(0, (data.count || 0)); bar.textContent = others > 1 ? `${others} utilisateurs dans cette matière` : (others === 1 ? `1 utilisateur dans cette matière` : ''); bar.style.display = others > 0 ? 'block' : 'none'; } } } catch(_) {} }); } catch (_) {} }
 
-async function goToClass(className) { currentClass = className; document.getElementById('initialSelection').style.display = 'none'; document.getElementById('classView').style.display = 'block'; initSSE(); document.getElementById('classTitle').textContent = `Classe ${className}`; savedData = {}; document.getElementById('matiereSelect').innerHTML = "<option value=''>Sélectionner une matière</option>"; document.getElementById('output').innerHTML = ""; document.getElementById('filterBy').value = ""; document.getElementById('filterOptions').style.display = 'none'; document.getElementById('showFilledOnly').checked = false; if (!className) return; showProgressBar(); try { const [tableResponse, allSelectionsResponse] = await Promise.all([ apiCall('loadLatestCopy', { className }), apiCall('loadAllSelectionsForClass', { className }) ]); if (tableResponse.success && Array.isArray(tableResponse.tables)) { tableResponse.tables.forEach(({ matiere, data }) => { savedData[matiere] = data; }); } populateMatiereSelect(className); const subjects = classSubjects[className] || []; subjects.forEach(subject => { if (!savedData[subject] || savedData[subject].length <= 1) { savedData[subject] = generateInitialData(); } }); if (subjects.length > 0) { document.getElementById('matiereSelect').value = subjects[0]; displaySelectedTable(); } } catch (error) { console.error("Erreur lors du chargement de la classe:", error); showErrorMessage("Erreur de chargement de la classe: " + error.message); } finally { hideProgressBar(); } }
+async function goToClass(className) { currentClass = className; document.getElementById('initialSelection').style.display = 'none'; document.getElementById('classView').style.display = 'block'; initSSE(); document.getElementById('classTitle').textContent = `Classe ${className}`; 
+  // Afficher la section Distribution Automatique pour PEI1-4 et DP2
+  const aiSection = document.getElementById('aiDistributionSection');
+  if (aiSection) {
+    const showAISection = ['PEI1', 'PEI2', 'PEI3', 'PEI4', 'DP2'].includes(className);
+    aiSection.style.display = showAISection ? 'block' : 'none';
+  }
+  savedData = {}; document.getElementById('matiereSelect').innerHTML = "<option value=''>Sélectionner une matière</option>"; document.getElementById('output').innerHTML = ""; document.getElementById('filterBy').value = ""; document.getElementById('filterOptions').style.display = 'none'; document.getElementById('showFilledOnly').checked = false; if (!className) return; showProgressBar(); try { const [tableResponse, allSelectionsResponse] = await Promise.all([ apiCall('loadLatestCopy', { className }), apiCall('loadAllSelectionsForClass', { className }) ]); if (tableResponse.success && Array.isArray(tableResponse.tables)) { tableResponse.tables.forEach(({ matiere, data }) => { savedData[matiere] = data; }); } populateMatiereSelect(className); const subjects = classSubjects[className] || []; subjects.forEach(subject => { if (!savedData[subject] || savedData[subject].length <= 1) { savedData[subject] = generateInitialData(); } }); if (subjects.length > 0) { document.getElementById('matiereSelect').value = subjects[0]; displaySelectedTable(); } } catch (error) { console.error("Erreur lors du chargement de la classe:", error); showErrorMessage("Erreur de chargement de la classe: " + error.message); } finally { hideProgressBar(); } }
 
 async function resetCurrentMatiere() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière."); return; } if (!confirm(`Êtes-vous sûr de vouloir réinitialiser "${selectedMatiere}" avec le calendrier 2025-2026?\n\nToutes les données existantes seront remplacées par le nouveau calendrier.`)) { return; } showProgressBar(); try { savedData[selectedMatiere] = generateInitialData(); const ack = await apiCall('saveTable', { className: currentClass, sheetName: selectedMatiere, data: savedData[selectedMatiere] }); if (ack.success) { showSuccessMessage(`"${selectedMatiere}" a été réinitialisée avec le calendrier 2025-2026 (31 semaines)!`); displaySelectedTable(); } } catch (error) { showErrorMessage("Erreur lors de la réinitialisation: " + error.message); } finally { hideProgressBar(); } }
 
@@ -467,3 +474,114 @@ async function generateExcelZipForClass() {
 }
 
 showInitialSelection();
+
+// === NOUVELLE FONCTIONNALITÉ: Distribution Automatique avec IA Gemini ===
+async function generateAIDistribution() {
+  const selectedMatiere = document.getElementById('matiereSelect').value;
+  if (!currentClass || !selectedMatiere) {
+    alert("Veuillez d'abord sélectionner une matière.");
+    return;
+  }
+  
+  // Vérifier que c'est bien une classe éligible
+  if (!['PEI1', 'PEI2', 'PEI3', 'PEI4', 'DP2'].includes(currentClass)) {
+    alert("Cette fonctionnalité est disponible uniquement pour PEI1, PEI2, PEI3, PEI4 et DP2.");
+    return;
+  }
+  
+  const manuelSummary = document.getElementById('manuelSummary').value.trim();
+  const cahierSummary = document.getElementById('cahierSummary').value.trim();
+  
+  if (!manuelSummary || !cahierSummary) {
+    alert("Veuillez remplir les deux sommaires (livre manuel ET cahier d'activité).");
+    return;
+  }
+  
+  if (!confirm(`Générer automatiquement la distribution pour "${selectedMatiere}" ?\n\nCette action remplacera le contenu actuel par la distribution générée par l'IA.`)) {
+    return;
+  }
+  
+  showProgressBar();
+  try {
+    const resp = await apiCall('generateAIDistributionGemini', {
+      className: currentClass,
+      sheetName: selectedMatiere,
+      manuelSummary: manuelSummary,
+      cahierSummary: cahierSummary
+    });
+    
+    if (resp.success && Array.isArray(resp.sessions)) {
+      const sessions = resp.sessions;
+      const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 5;
+      
+      // Ensure savedData matches calendar length
+      if (savedData[selectedMatiere].length !== academicCalendar.length + 1) {
+        console.warn('Calendar mismatch in AI distribution. Regenerating structure.');
+        savedData[selectedMatiere] = generateInitialData();
+      }
+      
+      // Remplir les slots disponibles avec les sessions IA
+      const slots = [];
+      let counters = {};
+      savedData[selectedMatiere].slice(1).forEach((row, idx) => {
+        const ev = academicCalendar[idx];
+        if (!ev) return;
+        const week = ev.week;
+        if (!counters[week]) counters[week] = 0;
+        if (isPlannable(ev)) {
+          if (counters[week] < sessionsPerWeek) {
+            slots.push(row);
+          }
+          counters[week]++;
+        }
+      });
+      
+      let i = 0;
+      for (const slot of slots) {
+        if (i >= sessions.length) break;
+        const session = sessions[i++];
+        slot[4] = (session.unite || '').toString();
+        slot[5] = (session.contenu || '').toString();
+        slot[6] = (session.ressources_lecon || '').toString();
+        slot[7] = (session.devoir || '').toString();
+        slot[8] = (session.ressources_devoir || '').toString();
+        slot[9] = (session.recherche || '').toString();
+        slot[10] = (session.projet || '').toString();
+      }
+      
+      // Compléter recherche/projet en fin de semaine
+      const weekGroups = {};
+      savedData[selectedMatiere].slice(1).forEach((row, idx) => {
+        const ev = academicCalendar[idx];
+        if (!ev) return;
+        if (!weekGroups[ev.week]) weekGroups[ev.week] = [];
+        weekGroups[ev.week].push(row);
+      });
+      
+      Object.keys(weekGroups).forEach(w => {
+        const rows = weekGroups[w];
+        const last = rows[rows.length - 1];
+        const lastTheme = rows.map(r => r[4]).filter(Boolean).pop() || selectedMatiere;
+        if (last) {
+          if (!last[9]) last[9] = `Recherche: approfondissement sur ${lastTheme}`;
+          if (!last[10]) last[10] = `Projet: application pratique sur ${lastTheme}`;
+        }
+      });
+      
+      renderTable(selectedMatiere, savedData[selectedMatiere]);
+      await saveTable(true);
+      showSuccessMessage('Distribution automatique générée avec succès ! La matière a été remplie selon les sommaires fournis.');
+      
+      // Vider les champs après succès
+      document.getElementById('manuelSummary').value = '';
+      document.getElementById('cahierSummary').value = '';
+    } else {
+      showErrorMessage('Réponse IA invalide. Veuillez réessayer.');
+    }
+  } catch (err) {
+    console.error('Erreur distribution automatique:', err);
+    showErrorMessage('Erreur lors de la génération automatique: ' + err.message);
+  } finally {
+    hideProgressBar();
+  }
+}

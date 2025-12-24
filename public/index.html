@@ -39,6 +39,24 @@
     </div>
     <h1 id="classTitle"></h1>
     <button onclick="showInitialSelection()" class="secondary"><i class="ri-arrow-go-back-line"></i> Changer de Classe</button>
+    
+    <!-- Section Distribution Automatique (Garçons) - Visible uniquement pour PEI1-4 et DP2 -->
+    <div id="aiDistributionSection" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin: 20px 0; color: white;">
+        <h3 style="margin-top: 0; color: white;"><i class="ri-magic-line"></i> Distribution Automatique IA (Garçons)</h3>
+        <p style="font-size: 14px; margin-bottom: 15px;">Insérez le sommaire du livre manuel et du cahier d'activité pour générer automatiquement la distribution en respectant le calendrier.</p>
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">📖 Sommaire du Livre Manuel:</label>
+            <textarea id="manuelSummary" rows="6" style="width: 100%; padding: 10px; border-radius: 5px; border: none; font-size: 13px;" placeholder="Ex: Chapitre 1: Introduction à l'algèbre..."></textarea>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">📝 Sommaire du Cahier d'Activité:</label>
+            <textarea id="cahierSummary" rows="6" style="width: 100%; padding: 10px; border-radius: 5px; border: none; font-size: 13px;" placeholder="Ex: Exercice 1: Résoudre des équations..."></textarea>
+        </div>
+        <button onclick="generateAIDistribution()" style="background: #fbbf24; color: #1f2937; padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">
+            <i class="ri-sparkles-line"></i> Générer Distribution Automatique
+        </button>
+    </div>
+    
     <div class="button-container" style="margin-bottom: 20px; margin-top: 10px;">
         <button onclick="generateExcel()" class="primary"><i class="ri-file-excel-2-line"></i> Générer Excel (Matière)</button>
         <button onclick="generateWord()" class="primary"><i class="ri-file-word-2-line"></i> Générer Word (Matière)</button>
