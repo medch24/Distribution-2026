@@ -240,7 +240,55 @@ function showSuccessMessage(message, duration = 3000) { let successDiv = documen
 
 async function apiCall(endpoint, payload) { try { const response = await fetch(`/api/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), }); if (!response.ok) { let errorMessage = `Erreur du serveur: ${response.status}`; try { const errorData = await response.json(); errorMessage = errorData.error || errorMessage; } catch (parseError) { errorMessage = response.statusText || errorMessage; } throw new Error(errorMessage); } if (endpoint === 'generatePdfOnServer') { return response.blob(); } return response.json(); } catch (error) { console.error(`Erreur API pour ${endpoint}:`, error); showErrorMessage(`Erreur: ${error.message}`); throw error; } }
 
-function initSSE() { if (sse) return; try { sse = new EventSource('/api/events'); sse.addEventListener('refresh', (ev) => { try { const data = JSON.parse(ev.data || '{}'); if (!currentClass) return; // Ne pas rafraîchir automatiquement - montrer juste une notification showSuccessMessage("Des modifications ont été effectuées par un autre utilisateur.", 3000); } catch(_) {} }); sse.addEventListener('presence', (ev) => { try { const data = JSON.parse(ev.data || '{}'); if (data && presenceKey && data.key === presenceKey) { const bar = document.getElementById('presenceBar'); if (bar) { const others = Math.max(0, (data.count || 0)); bar.textContent = others > 1 ? `${others} utilisateurs dans cette matière` : (others === 1 ? `1 utilisateur dans cette matière` : ''); bar.style.display = others > 0 ? 'block' : 'none'; } } } catch(_) {} }); } catch (_) {} }
+function initSSE() { 
+  if (sse) return; 
+  try { 
+    sse = new EventSource('/api/events'); 
+    
+    sse.addEventListener('ping', (ev) => {
+      console.log('SSE ping received');
+    });
+    
+    sse.addEventListener('refresh', (ev) => { 
+      try { 
+        const data = JSON.parse(ev.data || '{}'); 
+        if (!currentClass) return; 
+        // Ne pas rafraîchir automatiquement - montrer juste une notification 
+        showSuccessMessage("Des modifications ont été effectuées par un autre utilisateur.", 3000); 
+      } catch(_) {} 
+    }); 
+    
+    sse.addEventListener('presence', (ev) => { 
+      try { 
+        const data = JSON.parse(ev.data || '{}'); 
+        if (data && presenceKey && data.key === presenceKey) { 
+          const bar = document.getElementById('presenceBar'); 
+          if (bar) { 
+            const others = Math.max(0, (data.count || 0)); 
+            bar.textContent = others > 1 ? `${others} utilisateurs dans cette matière` : (others === 1 ? `1 utilisateur dans cette matière` : ''); 
+            bar.style.display = others > 0 ? 'block' : 'none'; 
+          } 
+        } 
+      } catch(_) {} 
+    });
+    
+    // Reconnecter automatiquement en cas d'erreur
+    sse.addEventListener('error', (e) => {
+      console.warn('SSE error, will reconnect...', e);
+      sse.close();
+      sse = null;
+      // Reconnecter après 5 secondes
+      setTimeout(() => {
+        if (currentClass) {
+          initSSE();
+        }
+      }, 5000);
+    });
+    
+  } catch (e) {
+    console.error('SSE initialization error:', e);
+  } 
+}
 
 async function goToClass(className) { currentClass = className; document.getElementById('initialSelection').style.display = 'none'; document.getElementById('classView').style.display = 'block'; initSSE(); document.getElementById('classTitle').textContent = `Classe ${className}`; 
   // Afficher la section Distribution Automatique pour PEI1-4 et DP2
