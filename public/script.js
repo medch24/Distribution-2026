@@ -1,4 +1,6 @@
-let currentClass = null; let savedData = {};
+let currentClass = null; 
+let savedData = {};
+let currentIsBoysSection = false;
 let currentUserId = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random())).toString();
 let sse; let presenceKey = null; let presenceTimer = null;
 const standardHeaders = ["Mois", "Semaine", "Date", "Jour", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"];
@@ -290,14 +292,69 @@ function initSSE() {
   } 
 }
 
-async function goToClass(className) { currentClass = className; document.getElementById('initialSelection').style.display = 'none'; document.getElementById('classView').style.display = 'block'; initSSE(); document.getElementById('classTitle').textContent = `Classe ${className}`; 
-  // Afficher la section Distribution Automatique pour PEI1-4 et DP2
+async function goToClass(className, isBoysSection = false) { 
+  currentClass = className; 
+  currentIsBoysSection = isBoysSection;
+  
+  document.getElementById('initialSelection').style.display = 'none'; 
+  document.getElementById('classView').style.display = 'block'; 
+  initSSE(); 
+  
+  // Afficher le badge "Garçons" si c'est la section garçons
+  const badge = isBoysSection ? ' <span style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 5px 15px; border-radius: 20px; font-size: 0.7em; color: white;"><i class="ri-robot-line"></i> Garçons (IA)</span>' : '';
+  document.getElementById('classTitle').innerHTML = `Classe ${className.replace('-G', '')}${badge}`;
+  
+  // Afficher la section IA uniquement pour la section garçons
   const aiSection = document.getElementById('aiDistributionSection');
   if (aiSection) {
-    const showAISection = ['PEI1', 'PEI2', 'PEI3', 'PEI4', 'DP2'].includes(className);
-    aiSection.style.display = showAISection ? 'block' : 'none';
+    aiSection.style.display = isBoysSection ? 'block' : 'none';
   }
-  savedData = {}; document.getElementById('matiereSelect').innerHTML = "<option value=''>Sélectionner une matière</option>"; document.getElementById('output').innerHTML = ""; document.getElementById('filterBy').value = ""; document.getElementById('filterOptions').style.display = 'none'; document.getElementById('showFilledOnly').checked = false; if (!className) return; showProgressBar(); try { const [tableResponse, allSelectionsResponse] = await Promise.all([ apiCall('loadLatestCopy', { className }), apiCall('loadAllSelectionsForClass', { className }) ]); if (tableResponse.success && Array.isArray(tableResponse.tables)) { tableResponse.tables.forEach(({ matiere, data }) => { savedData[matiere] = data; }); } populateMatiereSelect(className); const subjects = classSubjects[className] || []; subjects.forEach(subject => { if (!savedData[subject] || savedData[subject].length <= 1) { savedData[subject] = generateInitialData(); } }); if (subjects.length > 0) { document.getElementById('matiereSelect').value = subjects[0]; displaySelectedTable(); } } catch (error) { console.error("Erreur lors du chargement de la classe:", error); showErrorMessage("Erreur de chargement de la classe: " + error.message); } finally { hideProgressBar(); } }
+  
+  savedData = {}; 
+  document.getElementById('matiereSelect').innerHTML = "<option value=''>Sélectionner une matière</option>"; 
+  document.getElementById('output').innerHTML = ""; 
+  document.getElementById('filterBy').value = ""; 
+  document.getElementById('filterOptions').style.display = 'none'; 
+  document.getElementById('showFilledOnly').checked = false; 
+  
+  if (!className) return; 
+  
+  showProgressBar(); 
+  try { 
+    const [tableResponse, allSelectionsResponse] = await Promise.all([ 
+      apiCall('loadLatestCopy', { className }), 
+      apiCall('loadAllSelectionsForClass', { className }) 
+    ]); 
+    
+    if (tableResponse.success && Array.isArray(tableResponse.tables)) { 
+      tableResponse.tables.forEach(({ matiere, data }) => { 
+        savedData[matiere] = data; 
+      }); 
+    } 
+    
+    populateMatiereSelect(className); 
+    
+    // Utiliser les matières basées sur la classe de base (sans -G)
+    const baseClass = className.replace('-G', '');
+    const subjects = classSubjects[baseClass] || []; 
+    
+    subjects.forEach(subject => { 
+      if (!savedData[subject] || savedData[subject].length <= 1) { 
+        savedData[subject] = generateInitialData(); 
+      } 
+    }); 
+    
+    if (subjects.length > 0) { 
+      document.getElementById('matiereSelect').value = subjects[0]; 
+      displaySelectedTable(); 
+    } 
+  } catch (error) { 
+    console.error("Erreur lors du chargement de la classe:", error); 
+    showErrorMessage("Erreur de chargement de la classe: " + error.message); 
+  } finally { 
+    hideProgressBar(); 
+  } 
+}
 
 async function resetCurrentMatiere() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière."); return; } if (!confirm(`Êtes-vous sûr de vouloir réinitialiser "${selectedMatiere}" avec le calendrier 2025-2026?\n\nToutes les données existantes seront remplacées par le nouveau calendrier.`)) { return; } showProgressBar(); try { savedData[selectedMatiere] = generateInitialData(); const ack = await apiCall('saveTable', { className: currentClass, sheetName: selectedMatiere, data: savedData[selectedMatiere] }); if (ack.success) { showSuccessMessage(`"${selectedMatiere}" a été réinitialisée avec le calendrier 2025-2026 (31 semaines)!`); displaySelectedTable(); } } catch (error) { showErrorMessage("Erreur lors de la réinitialisation: " + error.message); } finally { hideProgressBar(); } }
 
@@ -332,7 +389,23 @@ function generateInitialData(calendar = academicCalendar) {
 function showClasses(section) { document.querySelectorAll('.section-classes').forEach(div => { div.style.display = 'none'; }); document.getElementById(section).style.display = 'block'; }
 function showInitialSelection() { document.getElementById('classView').style.display = 'none'; document.getElementById('initialSelection').style.display = 'block'; currentClass = null; savedData = {}; document.getElementById('matiereSelect').innerHTML = "<option value=''>Sélectionner une matière</option>"; document.getElementById('output').innerHTML = ""; document.getElementById('filterBy').value = ""; document.getElementById('filterOptions').innerHTML = ""; document.getElementById('filterOptions').style.display = 'none'; document.getElementById('showFilledOnly').checked = false; }
 
-function populateMatiereSelect(className) { const select = document.getElementById('matiereSelect'); select.innerHTML = "<option value=''>Sélectionner une matière</option>"; const subjects = classSubjects[className]; if (subjects) { subjects.forEach(subject => { const option = document.createElement('option'); option.value = subject; option.textContent = subject; select.appendChild(option); }); } }
+function populateMatiereSelect(className) { 
+  const select = document.getElementById('matiereSelect'); 
+  select.innerHTML = "<option value=''>Sélectionner une matière</option>"; 
+  
+  // Utiliser la classe de base (sans -G) pour obtenir les matières
+  const baseClass = className.replace('-G', '');
+  const subjects = classSubjects[baseClass]; 
+  
+  if (subjects) { 
+    subjects.forEach(subject => { 
+      const option = document.createElement('option'); 
+      option.value = subject; 
+      option.textContent = subject; 
+      select.appendChild(option); 
+    }); 
+  } 
+}
 
 function displaySelectedTable() { const selectedMatiere = document.getElementById('matiereSelect').value; presenceKey = currentClass && selectedMatiere ? `${currentClass}:${selectedMatiere}` : null; if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; } if (presenceKey) { initSSE(); heartbeatPresence(); presenceTimer = setInterval(heartbeatPresence, 10000); }
   if (selectedMatiere && currentClass) { if (!savedData[selectedMatiere] || savedData[selectedMatiere].length <= 1) { savedData[selectedMatiere] = generateInitialData(); }
@@ -531,9 +604,9 @@ async function generateAIDistribution() {
     return;
   }
   
-  // Vérifier que c'est bien une classe éligible
-  if (!['PEI1', 'PEI2', 'PEI3', 'PEI4', 'DP2'].includes(currentClass)) {
-    alert("Cette fonctionnalité est disponible uniquement pour PEI1, PEI2, PEI3, PEI4 et DP2.");
+  // Vérifier que c'est bien la section garçons
+  if (!currentIsBoysSection) {
+    alert("Cette fonctionnalité est disponible uniquement dans la section 'Secondaire Garçons'.");
     return;
   }
   
@@ -560,7 +633,8 @@ async function generateAIDistribution() {
     
     if (resp.success && Array.isArray(resp.sessions)) {
       const sessions = resp.sessions;
-      const sessionsPerWeek = (classSessionCounts[currentClass] && classSessionCounts[currentClass][selectedMatiere]) || 5;
+      const baseClass = currentClass.replace('-G', '');
+      const sessionsPerWeek = (classSessionCounts[baseClass] && classSessionCounts[baseClass][selectedMatiere]) || 5;
       
       // Ensure savedData matches calendar length
       if (savedData[selectedMatiere].length !== academicCalendar.length + 1) {

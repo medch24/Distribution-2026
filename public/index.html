@@ -9,70 +9,355 @@
     <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.47.1/docxtemplater.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- La ligne pour socket.io.js a été supprimée d'ici -->
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="white"/><path d="M16 96l112-40 112 40-112 40z" fill="%232563eb"/><path d="M64 120v48c0 22 48 40 64 40s64-18 64-40v-48" fill="none" stroke="%233b82f6" stroke-width="12"/></svg>' type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Styles globaux améliorés */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        /* Logo avec animation */
+        .logo-container {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        /* Boutons sections principaux */
+        .section-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 20px 40px;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            margin: 10px;
+            min-width: 250px;
+        }
+        
+        .section-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+        }
+        
+        .section-btn.boys-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        /* Section classes avec cartes */
+        .classes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .class-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .class-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* Section IA spéciale */
+        .ai-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .ai-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 0;
+        }
+        
+        .ai-input-group {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .ai-input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .ai-btn {
+            background: #fbbf24;
+            color: #1f2937;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ai-btn:hover {
+            background: #f59e0b;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
-<div id="initialSelection">
-    <div style="text-align: center; margin-bottom: 20px;">
+
+<!-- Écran d'accueil -->
+<div id="initialSelection" class="fade-in">
+    <div class="logo-container" style="text-align: center; margin-bottom: 20px;">
         <img src="logo-ecole.png" alt="Logo de l'école" style="max-width: 200px; height: auto; margin-bottom: 10px;">
     </div>
-    <h1>Distribution Annuelle 2025-2026</h1>
-    <button onclick="showClasses('maternelle')">Section Maternelle</button>
-    <button onclick="showClasses('primaire')">Section Primaire</button>
-    <button onclick="showClasses('secondaire')">Section Secondaire (PEI et P. Diplôme)</button>
-    <div id="maternelle" class="section-classes">
-        <button onclick="goToClass('TPS')">TPS</button><button onclick="goToClass('PS')">PS</button><button onclick="goToClass('MS')">MS</button><button onclick="goToClass('GS')">GS</button>
+    <h1 style="color: white; text-align: center; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Distribution Annuelle 2025-2026</h1>
+    
+    <div style="text-align: center; margin: 40px 0;">
+        <button class="section-btn" onclick="showClasses('maternelle')">
+            <i class="ri-bear-smile-line"></i> Section Maternelle
+        </button>
+        <button class="section-btn" onclick="showClasses('primaire')">
+            <i class="ri-book-read-line"></i> Section Primaire
+        </button>
+        <button class="section-btn" onclick="showClasses('secondaire')">
+            <i class="ri-graduation-cap-line"></i> Section Secondaire
+        </button>
+        <button class="section-btn boys-section" onclick="showClasses('secondaire-garcons')">
+            <i class="ri-user-star-line"></i> Secondaire Garçons (IA)
+        </button>
     </div>
-    <div id="primaire" class="section-classes">
-        <button onclick="goToClass('PP1')">PP1</button><button onclick="goToClass('PP2')">PP2</button><button onclick="goToClass('PP3')">PP3</button><button onclick="goToClass('PP4')">PP4</button><button onclick="goToClass('PP5')">PP5</button>
+    
+    <!-- Grilles de classes -->
+    <div id="maternelle" class="section-classes" style="display: none;">
+        <h2 style="color: white; text-align: center;">Maternelle</h2>
+        <div class="classes-grid">
+            <div class="class-card" onclick="goToClass('TPS', false)">
+                <i class="ri-seedling-line" style="font-size: 2em; color: #10b981;"></i>
+                <h3>TPS</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PS', false)">
+                <i class="ri-plant-line" style="font-size: 2em; color: #10b981;"></i>
+                <h3>PS</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('MS', false)">
+                <i class="ri-leaf-line" style="font-size: 2em; color: #10b981;"></i>
+                <h3>MS</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('GS', false)">
+                <i class="ri-flower-line" style="font-size: 2em; color: #10b981;"></i>
+                <h3>GS</h3>
+            </div>
+        </div>
     </div>
-    <div id="secondaire" class="section-classes">
-        <button onclick="goToClass('PEI1')">PEI1</button><button onclick="goToClass('PEI2')">PEI2</button><button onclick="goToClass('PEI3')">PEI3</button><button onclick="goToClass('PEI4')">PEI4</button><button onclick="goToClass('PEI5')">PEI5</button><button onclick="goToClass('DP1')">DP1</button><button onclick="goToClass('DP2')">DP2</button>
+    
+    <div id="primaire" class="section-classes" style="display: none;">
+        <h2 style="color: white; text-align: center;">Primaire</h2>
+        <div class="classes-grid">
+            <div class="class-card" onclick="goToClass('PP1', false)">
+                <i class="ri-bookmark-line" style="font-size: 2em; color: #3b82f6;"></i>
+                <h3>PP1</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PP2', false)">
+                <i class="ri-bookmark-2-line" style="font-size: 2em; color: #3b82f6;"></i>
+                <h3>PP2</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PP3', false)">
+                <i class="ri-bookmark-3-line" style="font-size: 2em; color: #3b82f6;"></i>
+                <h3>PP3</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PP4', false)">
+                <i class="ri-booklet-line" style="font-size: 2em; color: #3b82f6;"></i>
+                <h3>PP4</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PP5', false)">
+                <i class="ri-book-open-line" style="font-size: 2em; color: #3b82f6;"></i>
+                <h3>PP5</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div id="secondaire" class="section-classes" style="display: none;">
+        <h2 style="color: white; text-align: center;">Secondaire</h2>
+        <div class="classes-grid">
+            <div class="class-card" onclick="goToClass('PEI1', false)">
+                <i class="ri-graduation-cap-line" style="font-size: 2em; color: #8b5cf6;"></i>
+                <h3>PEI1</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI2', false)">
+                <i class="ri-graduation-cap-fill" style="font-size: 2em; color: #8b5cf6;"></i>
+                <h3>PEI2</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI3', false)">
+                <i class="ri-medal-line" style="font-size: 2em; color: #8b5cf6;"></i>
+                <h3>PEI3</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI4', false)">
+                <i class="ri-medal-fill" style="font-size: 2em; color: #8b5cf6;"></i>
+                <h3>PEI4</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI5', false)">
+                <i class="ri-trophy-line" style="font-size: 2em; color: #8b5cf6;"></i>
+                <h3>PEI5</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('DP1', false)">
+                <i class="ri-award-line" style="font-size: 2em; color: #ec4899;"></i>
+                <h3>DP1</h3>
+            </div>
+            <div class="class-card" onclick="goToClass('DP2', false)">
+                <i class="ri-award-fill" style="font-size: 2em; color: #ec4899;"></i>
+                <h3>DP2</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div id="secondaire-garcons" class="section-classes" style="display: none;">
+        <h2 style="color: white; text-align: center;">
+            <i class="ri-user-star-line"></i> Secondaire Garçons (avec IA)
+        </h2>
+        <div class="classes-grid">
+            <div class="class-card" onclick="goToClass('PEI1-G', true)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="ri-robot-line" style="font-size: 2em;"></i>
+                <h3>PEI1</h3>
+                <small>IA Disponible</small>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI2-G', true)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="ri-robot-line" style="font-size: 2em;"></i>
+                <h3>PEI2</h3>
+                <small>IA Disponible</small>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI3-G', true)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="ri-robot-line" style="font-size: 2em;"></i>
+                <h3>PEI3</h3>
+                <small>IA Disponible</small>
+            </div>
+            <div class="class-card" onclick="goToClass('PEI4-G', true)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="ri-robot-line" style="font-size: 2em;"></i>
+                <h3>PEI4</h3>
+                <small>IA Disponible</small>
+            </div>
+            <div class="class-card" onclick="goToClass('DP2-G', true)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <i class="ri-robot-line" style="font-size: 2em;"></i>
+                <h3>DP2</h3>
+                <small>IA Disponible</small>
+            </div>
+        </div>
     </div>
 </div>
-<div id="classView" style="display: none;" class="card accent">
+
+<!-- Vue de classe -->
+<div id="classView" style="display: none;" class="card accent slide-in">
     <div style="text-align: center; margin-bottom: 15px;">
         <img src="logo-ecole.png" alt="Logo de l'école" style="max-width: 150px; height: auto;">
     </div>
     <h1 id="classTitle"></h1>
     <button onclick="showInitialSelection()" class="secondary"><i class="ri-arrow-go-back-line"></i> Changer de Classe</button>
     
-    <!-- Section Distribution Automatique (Garçons) - Visible uniquement pour PEI1-4 et DP2 -->
-    <div id="aiDistributionSection" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin: 20px 0; color: white;">
-        <h3 style="margin-top: 0; color: white;"><i class="ri-magic-line"></i> Distribution Automatique IA (Garçons)</h3>
-        <p style="font-size: 14px; margin-bottom: 15px;">Insérez le sommaire du livre manuel et du cahier d'activité pour générer automatiquement la distribution en respectant le calendrier.</p>
-        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">📖 Sommaire du Livre Manuel:</label>
-            <textarea id="manuelSummary" rows="6" style="width: 100%; padding: 10px; border-radius: 5px; border: none; font-size: 13px;" placeholder="Ex: Chapitre 1: Introduction à l'algèbre..."></textarea>
+    <!-- Section IA (visible uniquement pour Secondaire Garçons) -->
+    <div id="aiDistributionSection" class="ai-section" style="display: none;">
+        <h3>
+            <i class="ri-magic-line"></i> 
+            Distribution Automatique avec IA
+        </h3>
+        <p style="margin: 10px 0; font-size: 15px;">
+            🎯 Utilisez l'intelligence artificielle pour générer automatiquement votre distribution en respectant le calendrier académique.
+        </p>
+        
+        <div class="ai-input-group">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 16px;">
+                📖 Sommaire du Livre Manuel
+            </label>
+            <textarea id="manuelSummary" placeholder="Exemple: Chapitre 1: Introduction à l'algèbre..."></textarea>
         </div>
-        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">📝 Sommaire du Cahier d'Activité:</label>
-            <textarea id="cahierSummary" rows="6" style="width: 100%; padding: 10px; border-radius: 5px; border: none; font-size: 13px;" placeholder="Ex: Exercice 1: Résoudre des équations..."></textarea>
+        
+        <div class="ai-input-group">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 16px;">
+                📝 Sommaire du Cahier d'Activité
+            </label>
+            <textarea id="cahierSummary" placeholder="Exemple: Exercice 1: Résoudre des équations..."></textarea>
         </div>
-        <button onclick="generateAIDistribution()" style="background: #fbbf24; color: #1f2937; padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">
-            <i class="ri-sparkles-line"></i> Générer Distribution Automatique
-        </button>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="ai-btn" onclick="generateAIDistribution()">
+                <i class="ri-sparkles-line"></i>
+                Générer avec l'IA
+            </button>
+        </div>
     </div>
     
-    <div class="button-container" style="margin-bottom: 20px; margin-top: 10px;">
-        <button onclick="generateExcel()" class="primary"><i class="ri-file-excel-2-line"></i> Générer Excel (Matière)</button>
-        <button onclick="generateWord()" class="primary"><i class="ri-file-word-2-line"></i> Générer Word (Matière)</button>
-        <button onclick="generateExcelZipForClass()" class="secondary"><i class="ri-archive-2-line"></i> Excel (ZIP par Classe)</button>
-        <button onclick="generateWordZipForClass()" class="secondary"><i class="ri-archive-stack-line"></i> Word (ZIP par Classe)</button>
+    <!-- Boutons d'action -->
+    <div class="button-container" style="margin: 20px 0;">
+        <button onclick="generateExcel()" class="primary"><i class="ri-file-excel-2-line"></i> Excel</button>
+        <button onclick="generateWord()" class="primary"><i class="ri-file-word-2-line"></i> Word</button>
         <button onclick="saveTable()" class="primary"><i class="ri-save-3-line"></i> Enregistrer</button>
-        <button onclick="resetCurrentMatiere()" class="danger"><i class="ri-refresh-line"></i> Réinitialiser la matière</button>
+        <button onclick="resetCurrentMatiere()" class="danger"><i class="ri-refresh-line"></i> Réinitialiser</button>
         <button onclick="document.getElementById('excelUploadInput').click()" class="info"><i class="ri-upload-2-line"></i> Importer Excel</button>
         <input type="file" id="excelUploadInput" style="display: none;" onchange="handleFileUpload(event)" accept=".xlsx, .xls">
-        <button onclick="document.getElementById('docxUploadInput').click()" class="info"><i class="ri-brain-line"></i> Importer Word (IA)</button>
-        <input type="file" id="docxUploadInput" style="display: none;" onchange="handleDocxImport(event)" accept=".docx">
     </div>
+    
     <div>
         <label for="matiereSelect">Choisir une matière :</label>
-        <select id="matiereSelect" onchange="displaySelectedTable()"><option value="">Sélectionner une matière</option></select>
+        <select id="matiereSelect" onchange="displaySelectedTable()">
+            <option value="">Sélectionner une matière</option>
+        </select>
     </div>
+    
     <div style="margin-top: 20px;">
         <label for="filterBy">Filtrer par :</label>
         <select id="filterBy" onchange="populateFilterOptions()">
@@ -82,8 +367,12 @@
         </select>
         <select id="filterOptions" onchange="applyFilter()" style="display: none;"></select>
         <button onclick="clearFilter()" class="warning"><i class="ri-filter-off-line"></i> Annuler le filtre</button>
-        <label style="margin-left: 20px;"><input type="checkbox" id="showFilledOnly" onclick="toggleFilledRows()"> Afficher uniquement les lignes remplies</label>
+        <label style="margin-left: 20px;">
+            <input type="checkbox" id="showFilledOnly" onclick="toggleFilledRows()"> 
+            Afficher uniquement les lignes remplies
+        </label>
     </div>
+    
     <div id="progressBar"><div></div></div>
     <div id="presenceBar"></div>
     <div class="table-container accent">
