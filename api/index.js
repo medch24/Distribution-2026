@@ -446,15 +446,18 @@ app.post('/generateAIDistributionGemini', async (req, res) => {
       });
     }
     
-    // Vérifier que c'est une classe éligible
-    if (!['PEI1', 'PEI2', 'PEI3', 'PEI4', 'DP2'].includes(className)) {
+    // Vérifier que c'est une classe de la section garçons (avec -G)
+    const boysClasses = ['PEI1-G', 'PEI2-G', 'PEI3-G', 'PEI4-G', 'DP2-G'];
+    if (!boysClasses.includes(className)) {
       return res.status(400).json({
         success: false,
-        error: 'Cette fonctionnalité est disponible uniquement pour PEI1, PEI2, PEI3, PEI4 et DP2.'
+        error: 'Cette fonctionnalité est disponible uniquement pour la section Secondaire Garçons.'
       });
     }
     
-    const sessions = await callGeminiAPI(sheetName, className, manuelSummary, cahierSummary);
+    // Utiliser la classe de base pour l'IA (sans -G)
+    const baseClass = className.replace('-G', '');
+    const sessions = await callGeminiAPI(sheetName, baseClass, manuelSummary, cahierSummary);
     
     if (!sessions || sessions.length === 0) {
       return res.status(500).json({
