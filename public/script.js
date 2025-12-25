@@ -304,10 +304,17 @@ async function goToClass(className, isBoysSection = false) {
   const badge = isBoysSection ? ' <span style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 5px 15px; border-radius: 20px; font-size: 0.7em; color: white;"><i class="ri-robot-line"></i> Garçons (IA)</span>' : '';
   document.getElementById('classTitle').innerHTML = `Classe ${className.replace('-G', '')}${badge}`;
   
-  // Afficher la section IA uniquement pour la section garçons
+  // Afficher le BOUTON IA pour la section garçons (le formulaire reste caché)
+  const aiButtonContainer = document.getElementById('aiButtonContainer');
   const aiSection = document.getElementById('aiDistributionSection');
+  
+  if (aiButtonContainer) {
+    aiButtonContainer.style.display = isBoysSection ? 'block' : 'none';
+  }
+  
+  // Le formulaire IA reste toujours caché au départ
   if (aiSection) {
-    aiSection.style.display = isBoysSection ? 'block' : 'none';
+    aiSection.style.display = 'none';
   }
   
   savedData = {}; 
@@ -694,9 +701,10 @@ async function generateAIDistribution() {
       await saveTable(true);
       showSuccessMessage('Distribution automatique générée avec succès ! La matière a été remplie selon les sommaires fournis.');
       
-      // Vider les champs après succès
+      // Vider les champs et cacher le formulaire après succès
       document.getElementById('manuelSummary').value = '';
       document.getElementById('cahierSummary').value = '';
+      toggleAIForm(); // Fermer le formulaire
     } else {
       showErrorMessage('Réponse IA invalide. Veuillez réessayer.');
     }
@@ -705,5 +713,24 @@ async function generateAIDistribution() {
     showErrorMessage('Erreur lors de la génération automatique: ' + err.message);
   } finally {
     hideProgressBar();
+  }
+}
+
+/**
+ * Afficher/Cacher le formulaire de génération IA
+ */
+function toggleAIForm() {
+  const aiSection = document.getElementById('aiDistributionSection');
+  if (aiSection) {
+    if (aiSection.style.display === 'none' || aiSection.style.display === '') {
+      aiSection.style.display = 'block';
+      // Scroll vers le formulaire
+      aiSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      aiSection.style.display = 'none';
+      // Vider les champs en cas d'annulation
+      document.getElementById('manuelSummary').value = '';
+      document.getElementById('cahierSummary').value = '';
+    }
   }
 }
