@@ -14,15 +14,17 @@
 
 html, body {
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
   color: var(--text);
   text-align: center;
-  padding: 24px;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 h1 {
@@ -32,14 +34,27 @@ h1 {
   letter-spacing: .2px;
 }
 
+/* Logo arrondi avec animation */
+.logo-container img {
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+}
+
+.logo-container img:hover {
+  transform: scale(1.05);
+}
+
 .card {
-  max-width: 1200px;
+  max-width: 98%;
+  width: 100%;
   margin: 0 auto;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 18px;
+  padding: 16px;
   box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+  box-sizing: border-box;
 }
 
 .accent {
@@ -85,28 +100,108 @@ select {
 
 .button-container button { margin: 2px 4px; }
 
-.table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+/* Table container responsive avec marges réduites */
+.table-container { 
+  width: 100%; 
+  overflow-x: auto; 
+  -webkit-overflow-scrolling: touch; 
+  border: 1px solid var(--border); 
+  border-radius: 10px; 
+  background: var(--panel);
+  margin: 10px 0;
+}
 
-table { width: 100%; min-width: 1200px; border-collapse: collapse; margin: 16px 0; background: var(--panel); table-layout: fixed; }
+/* Table avec colonnes flexibles et optimisées */
+table { 
+  width: 100%; 
+  min-width: 1400px; 
+  border-collapse: collapse; 
+  margin: 0;
+  background: var(--panel); 
+  table-layout: auto;
+}
 
-th, td { padding: 10px; text-align: left; border: 1px solid var(--border); font-size: 12px; word-wrap: break-word; vertical-align: top; }
+th, td { 
+  padding: 8px; 
+  text-align: left; 
+  border: 1px solid var(--border); 
+  font-size: 12px; 
+  word-wrap: break-word; 
+  vertical-align: top;
+}
 
-th { background: linear-gradient(180deg, #eef2ff, #eaf1ff); color: #1e293b; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+th { 
+  background: linear-gradient(180deg, #eef2ff, #eaf1ff); 
+  color: #1e293b; 
+  font-weight: 600; 
+  position: sticky; 
+  top: 0; 
+  z-index: 10;
+  white-space: nowrap;
+}
 
 tr:nth-child(even) td { background: var(--table-stripe); }
 
 .merged-cell { font-weight: 600; text-align: center; vertical-align: middle; color: #0f172a; }
 
-.modifiable-input { width: calc(100% - 16px); min-height: 76px; padding: 8px; border-radius: 8px; resize: vertical; font-size: 12px; box-sizing: border-box; display: block; margin: 0; border: 1px solid #cbd5e1; background: #ffffff; color: var(--text); }
+.modifiable-input { 
+  width: 100%; 
+  min-height: 70px; 
+  padding: 6px; 
+  border-radius: 6px; 
+  resize: vertical; 
+  font-size: 11px; 
+  box-sizing: border-box; 
+  display: block; 
+  margin: 0; 
+  border: 1px solid #cbd5e1; 
+  background: #ffffff; 
+  color: var(--text);
+}
 
-th:nth-child(1), td:nth-child(1) { width: 45px; }
-th:nth-child(2), td:nth-child(2) { width: 45px; }
-th:nth-child(3), td:nth-child(3) { width: 45px; text-align: center; }
+/* Colonnes optimisées pour meilleure utilisation de l'espace */
+th:nth-child(1), td:nth-child(1) { width: 50px; min-width: 50px; } /* Mois */
+th:nth-child(2), td:nth-child(2) { width: 45px; min-width: 45px; } /* Sem. */
+th:nth-child(3), td:nth-child(3) { width: 45px; min-width: 45px; text-align: center; } /* Séan. */
+th:nth-child(4), td:nth-child(4) { width: 12%; min-width: 120px; } /* Unité/Chapitre */
+th:nth-child(5), td:nth-child(5) { width: 18%; min-width: 180px; } /* Contenu */
+th:nth-child(6), td:nth-child(6) { width: 14%; min-width: 140px; } /* Ressources Leçons */
+th:nth-child(7), td:nth-child(7) { width: 14%; min-width: 140px; } /* Devoir */
+th:nth-child(8), td:nth-child(8) { width: 14%; min-width: 140px; } /* Ressources Devoirs */
+th:nth-child(9), td:nth-child(9) { width: 13%; min-width: 130px; } /* Recherche */
+th:nth-child(10), td:nth-child(10) { width: 13%; min-width: 130px; } /* Projets */
 
-#progressBar { width: 100%; height: 8px; background-color: #eef2ff; border: 1px solid var(--border); display: none; position: relative; margin: 14px 0; border-radius: 999px; overflow: hidden; }
-#progressBar div { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width 0.4s ease-in-out; }
+#progressBar { 
+  width: 100%; 
+  height: 8px; 
+  background-color: #eef2ff; 
+  border: 1px solid var(--border); 
+  display: none; 
+  position: relative; 
+  margin: 14px 0; 
+  border-radius: 999px; 
+  overflow: hidden; 
+}
 
-#presenceBar { display:none; position:sticky; top:8px; z-index:2; margin:8px 0; padding:8px 10px; border:1px dashed #cbd5e1; border-radius:8px; color:#0f172a; background:#f8fafc; }
+#progressBar div { 
+  height: 100%; 
+  width: 0; 
+  background: linear-gradient(90deg, var(--primary), var(--primary-2)); 
+  transition: width 0.4s ease-in-out; 
+}
+
+#presenceBar { 
+  display:none; 
+  position:sticky; 
+  top:8px; 
+  z-index:2; 
+  margin:8px 0; 
+  padding:8px 10px; 
+  border:1px dashed #cbd5e1; 
+  border-radius:8px; 
+  color:#0f172a; 
+  background:#f8fafc; 
+}
 
 /* Utility button accents */
 button.primary { background: linear-gradient(180deg, #2563eb, #1d4ed8); color: #fff; border-color: #1d4ed8; }
@@ -114,3 +209,28 @@ button.secondary { background: #f1f5f9; }
 button.danger { background: linear-gradient(180deg, #ef4444, #dc2626); color: #fff; border-color: #dc2626; }
 button.warning { background: linear-gradient(180deg, #f59e0b, #d97706); color: #fff; border-color: #d97706; }
 button.info { background: linear-gradient(180deg, #6f42c1, #5b36a1); color: #fff; border-color: #5b36a1; }
+
+/* Responsive pour écrans moyens */
+@media (max-width: 1600px) {
+  body { padding: 8px; }
+  .card { max-width: 99%; padding: 12px; }
+  table { min-width: 1200px; }
+}
+
+/* Responsive pour tablettes */
+@media (max-width: 1024px) {
+  body { padding: 5px; }
+  .card { max-width: 100%; padding: 10px; }
+  th, td { padding: 6px; font-size: 11px; }
+  .modifiable-input { min-height: 60px; font-size: 10px; }
+}
+
+/* Responsive pour mobiles */
+@media (max-width: 768px) {
+  body { padding: 3px; }
+  .card { padding: 8px; }
+  h1 { font-size: 20px; }
+  button { font-size: 12px; padding: 8px 10px; }
+  th, td { padding: 5px; font-size: 10px; }
+  .modifiable-input { min-height: 50px; }
+}
