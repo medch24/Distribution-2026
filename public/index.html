@@ -309,34 +309,53 @@
     <h1 id="classTitle"></h1>
     <button onclick="showInitialSelection()" class="secondary"><i class="ri-arrow-go-back-line"></i> Changer de Classe</button>
     
-    <!-- Section IA (visible uniquement pour Secondaire Garçons) -->
+    <!-- Bouton IA (visible uniquement pour Secondaire Garçons) -->
+    <div id="aiButtonContainer" style="display: none; text-align: center; margin: 20px 0;">
+        <button onclick="toggleAIForm()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px 40px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 8px 20px rgba(240, 147, 251, 0.4); transition: all 0.3s ease;">
+            <i class="ri-magic-line"></i> Utiliser l'IA pour Générer la Distribution
+        </button>
+    </div>
+    
+    <!-- Formulaire IA (caché par défaut, s'affiche au clic) -->
     <div id="aiDistributionSection" class="ai-section" style="display: none;">
         <h3>
             <i class="ri-magic-line"></i> 
-            Distribution Automatique avec IA
+            Distribution Automatique avec IA Gemini
         </h3>
         <p style="margin: 10px 0; font-size: 15px;">
-            🎯 Utilisez l'intelligence artificielle pour générer automatiquement votre distribution en respectant le calendrier académique.
+            🎯 Remplissez les champs ci-dessous pour générer automatiquement votre distribution en respectant le calendrier académique et les règles de séances.
         </p>
         
         <div class="ai-input-group">
             <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 16px;">
-                📖 Sommaire du Livre Manuel
+                📖 Sommaire du Livre Manuel (Table des Matières)
             </label>
-            <textarea id="manuelSummary" placeholder="Exemple: Chapitre 1: Introduction à l'algèbre..."></textarea>
+            <textarea id="manuelSummary" placeholder="Exemple:
+Chapitre 1: Introduction à l'algèbre
+  1.1 Les nombres relatifs (pages 5-12)
+  1.2 Les équations du premier degré (pages 13-20)
+Chapitre 2: Géométrie
+  2.1 Les triangles (pages 21-30)
+  2.2 Le théorème de Pythagore (pages 31-38)"></textarea>
         </div>
         
         <div class="ai-input-group">
             <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 16px;">
-                📝 Sommaire du Cahier d'Activité
+                📝 Sommaire du Cahier d'Activité (Exercices)
             </label>
-            <textarea id="cahierSummary" placeholder="Exemple: Exercice 1: Résoudre des équations..."></textarea>
+            <textarea id="cahierSummary" placeholder="Exemple:
+Exercice 1: Résoudre des équations (pages 5-8)
+Exercice 2: Calcul mental (pages 9-12)
+Exercice 3: Problèmes appliqués (pages 13-16)
+Exercice 4: Construction de triangles (pages 17-22)"></textarea>
         </div>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="ai-btn" onclick="generateAIDistribution()">
-                <i class="ri-sparkles-line"></i>
-                Générer avec l'IA
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button onclick="generateAIDistribution()" style="flex: 1; background: #10b981; color: white; padding: 15px 30px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                <i class="ri-sparkles-line"></i> Générer Distribution Automatique
+            </button>
+            <button onclick="toggleAIForm()" style="flex: 0.3; background: #ef4444; color: white; padding: 15px 30px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                <i class="ri-close-line"></i> Annuler
             </button>
         </div>
     </div>
