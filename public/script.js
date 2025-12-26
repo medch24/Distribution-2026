@@ -489,7 +489,70 @@ function prepareExcelDataForSubject(subjectName) {
     savedData[subjectName] = generateInitialData();
     return prepareExcelDataForSubject(subjectName); // Recursive call with fixed data
   }
-   const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; let weekMaxSessions = {}; const baseClass = getBaseClassName(currentClass); const baseSessionsPerWeek = (classSessionCounts[baseClass] && classSessionCounts[baseClass][subjectName]) || 5; sheetData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if (!weekMaxSessions[weekValue]) { const specialDays = sheetData.slice(1).filter((r, i) => { const e = academicCalendar[i]; return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e); }).length; weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays); } if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; const sessionsPerWeek = weekMaxSessions[weekValue]; let seanceValue = ''; if (isPlannable(event)) { if (sessionCounters[weekValue] < sessionsPerWeek) { sessionCounters[weekValue]++; seanceValue = sessionCounters[weekValue]; } else { return; } } if (!isPlannable(event)) { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', '', '', event.type, '', '', '', '', '', '' ]); } else { dataForExport.push([ monthAbbreviations[row[0]] || row[0] || '', row[1] ? row[1].replace('Semaine ', 'S') : '', seanceValue, row[4] || '', row[5] || '', row[6] || '', row[7] || '', row[8] || '', row[9] || '', row[10] || '' ]); } }); return dataForExport; }
+   const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; let weekMaxSessions = {}; const baseClass = getBaseClassName(currentClass); const baseSessionsPerWeek = (classSessionCounts[baseClass] && classSessionCounts[baseClass][subjectName]) || 5; 
+  
+  // Utiliser la MÊME logique que renderTable pour l'export
+  sheetData.slice(1).forEach((row, dataIndex) => { 
+    const event = academicCalendar[dataIndex]; 
+    if (!event) return; 
+    const weekValue = event.week; 
+    
+    // Calculer weekMaxSessions pour cette semaine
+    if (!weekMaxSessions[weekValue]) { 
+      const specialDays = sheetData.slice(1).filter((r, i) => { 
+        const e = academicCalendar[i]; 
+        return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e); 
+      }).length; 
+      weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDays); 
+    } 
+    
+    if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; 
+    const sessionsPerWeek = weekMaxSessions[weekValue]; 
+    const isSpecialEvent = !isPlannable(event);
+    
+    // Si c'est un jour spécial, exporter la ligne avec le type d'événement
+    if (isSpecialEvent) { 
+      dataForExport.push([ 
+        monthAbbreviations[row[0]] || row[0] || '', 
+        '', 
+        '', 
+        event.type, 
+        '', '', '', '', '', '' 
+      ]); 
+    } else {
+      // Si c'est un jour plannable, utiliser la MÊME logique que renderTable
+      const remainingSessions = sessionsPerWeek - sessionCounters[weekValue];
+      if (remainingSessions > 0) {
+        const remainingDays = sheetData.slice(1).slice(dataIndex).filter((r, i) => {
+          const e = academicCalendar[dataIndex + i];
+          return e && e.week === weekValue && isPlannable(e);
+        }).length;
+        
+        if (remainingDays > 0) {
+          const sessionsThisDay = Math.ceil(remainingSessions / remainingDays);
+          const actualSessions = Math.min(sessionsThisDay, remainingSessions);
+          
+          // Exporter plusieurs séances pour ce jour si nécessaire
+          for (let s = 0; s < actualSessions; s++) {
+            sessionCounters[weekValue]++;
+            dataForExport.push([ 
+              monthAbbreviations[row[0]] || row[0] || '', 
+              row[1] ? row[1].replace('Semaine ', 'S') : '', 
+              sessionCounters[weekValue], 
+              row[4] || '', 
+              row[5] || '', 
+              row[6] || '', 
+              row[7] || '', 
+              row[8] || '', 
+              row[9] || '', 
+              row[10] || '' 
+            ]);
+          }
+        }
+      }
+    }
+  }); 
+  return dataForExport; }
 
 function prepareWordDataForSubject(subjectName, subjectData, className) { const data = subjectData.slice(1); const dataForWord = data.filter((row, i) => academicCalendar[i] && academicCalendar[i].month !== 'Août'); const calendarForWord = academicCalendar.filter(event => event && event.month !== 'Août'); const dataByWeek = {}; function getWeekNumber(weekString) { const match = weekString.match(/Semaine (\d+)/); return match ? parseInt(match[1], 10) : null; } dataForWord.forEach((row, index) => { const event = calendarForWord[index]; if (!event) return; const week = event.week; const weekNum = getWeekNumber(week); if (weekNum && !dataByWeek[weekNum]) { dataByWeek[weekNum] = { week_name: week, seances: [] }; } }); let sessionCounters = {}; let weekMaxSessions = {}; const baseClass = getBaseClassName(className); const baseSessionsPerWeek = (classSessionCounts[baseClass] && classSessionCounts[baseClass][subjectName]) || 5; dataForWord.forEach((row, index) => { const event = calendarForWord[index]; if (!event) return; const week = event.week; const weekNum = getWeekNumber(week); if (!weekNum) return; if (!weekMaxSessions[weekNum]) { const specialDays = calendarForWord.filter((e) => { return e && e.week === week && !isPlannable(e) && isSpecialDay(e); }).length; weekMaxSessions[weekNum] = Math.max(1, baseSessionsPerWeek - specialDays); } if (!sessionCounters[weekNum]) sessionCounters[weekNum] = 0; const isSpecialEvent = !isPlannable(event); const sessionsPerWeek = weekMaxSessions[weekNum]; if (!isSpecialEvent) { const remainingSessions = sessionsPerWeek - sessionCounters[weekNum]; if (remainingSessions > 0) { const remainingDays = calendarForWord.slice(index).filter((e) => { return e && e.week === week && isPlannable(e); }).length; if (remainingDays > 0) { const sessionsThisDay = Math.ceil(remainingSessions / remainingDays); const actualSessions = Math.min(sessionsThisDay, remainingSessions); for (let s = 0; s < actualSessions; s++) { sessionCounters[weekNum]++; const seanceData = { seance_num: sessionCounters[weekNum], chapitre: row[4] || '', contenu_lecon: row[5] || '', res_lecon: row[6] || '', devoir: row[7] || '', res_devoir: row[8] || '', recherche: row[9] || '', projet: row[10] || '' }; dataByWeek[weekNum].seances.push(seanceData); } } } } else { const weekSeances = dataByWeek[weekNum].seances; if (!weekSeances.some(s => s.chapitre === event.type)) { const specialSeance = { seance_num: ' ', chapitre: event.type, contenu_lecon: '', res_lecon: '', devoir: '', res_devoir: '', recherche: '', projet: '' }; dataByWeek[weekNum].seances.push(specialSeance); } } }); const templateData = { class_name: className, subject_name: subjectName }; Object.keys(dataByWeek).forEach(weekNum => { const weekData = dataByWeek[weekNum]; const weekKey = `week${weekNum}`; const sortedSeances = weekData.seances.sort((a, b) => { if (a.seance_num === ' ') return -1; if (b.seance_num === ' ') return 1; return a.seance_num - b.seance_num; }); templateData[`${weekKey}_name`] = weekData.week_name; templateData[`${weekKey}_seances`] = sortedSeances; }); return templateData; }
 
