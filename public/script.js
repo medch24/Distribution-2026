@@ -3,6 +3,11 @@ let savedData = {};
 let currentIsBoysSection = false;
 let currentUserId = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random())).toString();
 let sse; let presenceKey = null; let presenceTimer = null;
+
+// Debounce timer pour l'enregistrement automatique
+let autoSaveTimer = null;
+const AUTO_SAVE_DELAY = 1500; // 1.5 secondes après la dernière frappe
+
 const standardHeaders = ["Mois", "Semaine", "Date", "Jour", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"];
 const monthAbbreviations = { 'Janvier': 'Janv.', 'Février': 'Févr.', 'Mars': 'Mars', 'Avril': 'Avr.', 'Mai': 'Mai', 'Juin': 'Juin', 'Juillet': 'Juil.', 'Août': 'Août', 'Septembre': 'Sept.', 'Octobre': 'Oct.', 'Novembre': 'Nov.', 'Décembre': 'Déc.' }; 
 const classSubjects = { 'TPS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'MS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'GS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP1': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP2': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],'PP3': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'], 'PP4': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences humaines', 'Sciences naturelles', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PP5': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI1': ['Langue et littérature', 'Maths', 'Sciences', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI2': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI3': ['Maths', 'Langue et littérature', 'Anglais', 'French second language', 'Biologie', 'Design', 'Individus et Sociétés', 'Physique-chimie', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI4': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'PEI5': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'DP1': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'], 'DP2': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'French second language', 'Design', 'Individus et Sociétés', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'] };
@@ -423,16 +428,52 @@ function populateMatiereSelect(className) {
 }
 
 function displaySelectedTable() { const selectedMatiere = document.getElementById('matiereSelect').value; presenceKey = currentClass && selectedMatiere ? `${currentClass}:${selectedMatiere}` : null; if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; } if (presenceKey) { initSSE(); heartbeatPresence(); presenceTimer = setInterval(heartbeatPresence, 10000); }
+  
+  // Afficher l'indicateur d'enregistrement automatique
+  const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+  if (autoSaveIndicator) {
+    autoSaveIndicator.style.display = selectedMatiere ? 'inline' : 'none';
+  }
+  
   if (selectedMatiere && currentClass) { if (!savedData[selectedMatiere] || savedData[selectedMatiere].length <= 1) { savedData[selectedMatiere] = generateInitialData(); }
     if (typeof needsNormalization === 'function' && needsNormalization(selectedMatiere)) { normalizeSavedDataForSubject(selectedMatiere); saveTable(true); }
-    renderTable(selectedMatiere, savedData[selectedMatiere]); } else { document.getElementById('output').innerHTML = ""; } }
+    renderTable(selectedMatiere, savedData[selectedMatiere]); } else { document.getElementById('output').innerHTML = ""; if (autoSaveIndicator) { autoSaveIndicator.style.display = 'none'; } } }
 
 function renderTable(sheetName, jsonData) { const output = document.getElementById('output'); output.innerHTML = ""; const table = document.createElement('table'); const thead = document.createElement('thead'); const headerRow = document.createElement('tr'); const displayedHeaders = ["Mois", "Sem.", "Séan.", "Unité/Chapitre", "Contenu de la leçon", "Ressources (Leçons)", "Devoir", "Ressources (Devoirs)", "Recherche", "Projets"]; displayedHeaders.forEach(col => { const th = document.createElement('th'); th.textContent = col; headerRow.appendChild(th); }); thead.appendChild(headerRow); table.appendChild(thead); const tbody = document.createElement('tbody'); let sessionCounters = {}; let weekMaxSessions = {}; const baseClass = getBaseClassName(currentClass); const baseSessionsPerWeek = (classSessionCounts[baseClass] && classSessionCounts[baseClass][sheetName]) || 5; 
   jsonData.slice(1).forEach((row, dataIndex) => { const event = academicCalendar[dataIndex]; if (!event) return; const weekValue = event.week; if(!weekMaxSessions[weekValue]) { const specialDaysCount = jsonData.slice(1).filter((r, i) => { const e = academicCalendar[i]; return e && e.week === weekValue && !isPlannable(e) && isSpecialDay(e); }).length; weekMaxSessions[weekValue] = Math.max(1, baseSessionsPerWeek - specialDaysCount); }
     if(!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; const isSpecialEvent = !isPlannable(event); const sessionsPerWeek = weekMaxSessions[weekValue]; const renderSession = (sessionNum) => { const rowElement = document.createElement('tr'); const originalRowIndex = savedData[sheetName].findIndex(originalRow => originalRow === row); const rowIndexForDB = originalRowIndex !== -1 ? originalRowIndex - 1 : -1; const monthTd = document.createElement('td'); monthTd.textContent = monthAbbreviations[row[0]] || row[0] || ''; rowElement.appendChild(monthTd); const weekTd = document.createElement('td'); if (isSpecialEvent) { weekTd.textContent = ''; } else { weekTd.textContent = row[1] ? row[1].replace('Semaine ', 'S') : ''; } rowElement.appendChild(weekTd); const seanceTd = document.createElement('td'); if (!isSpecialEvent) { seanceTd.textContent = sessionNum; } rowElement.appendChild(seanceTd); if (isSpecialEvent) { const mergedCell = document.createElement('td'); mergedCell.colSpan = displayedHeaders.length - 3; mergedCell.innerHTML = `<b>${event.type}</b>`; mergedCell.classList.add('merged-cell'); let bgColor = '#f2f2f2'; const typeLC = event.type.toLowerCase(); if (typeLC.includes('vacance')) bgColor = '#90EE90'; else if (typeLC.includes('examen')) bgColor = '#FFA07A'; else if (typeLC.includes('evaluation') || typeLC.includes('évaluation')) bgColor = '#FFB6C1'; else if (typeLC.includes('day')) bgColor = '#ADD8E6'; else if (typeLC.includes('orientation')) bgColor = '#FFD700';  mergedCell.style.backgroundColor = bgColor; rowElement.appendChild(mergedCell); } else { for (let i = 4; i < standardHeaders.length; i++) { const td = document.createElement('td'); const input = document.createElement('textarea'); input.value = row[i] || ''; input.className = 'modifiable-input'; input.dataset.rowIndex = rowIndexForDB; input.dataset.colIndex = i; td.appendChild(input); rowElement.appendChild(td); } } tbody.appendChild(rowElement); };
     if (isSpecialEvent) { renderSession(null); } else { const remainingSessions = sessionsPerWeek - sessionCounters[weekValue]; if (remainingSessions > 0) { const remainingDays = jsonData.slice(dataIndex).filter((r, i) => { const e = academicCalendar[dataIndex + i]; return e && e.week === weekValue && isPlannable(e); }).length; if (remainingDays > 0) { const sessionsThisDay = Math.ceil(remainingSessions / remainingDays); const actualSessions = Math.min(sessionsThisDay, remainingSessions); for (let s = 0; s < actualSessions; s++) { sessionCounters[weekValue]++; renderSession(sessionCounters[weekValue]); } } } } }); table.appendChild(tbody); output.appendChild(table); addEventListenersToTable(sheetName); applyFilter(); }
 
-function addEventListenersToTable(sheetName) { document.querySelectorAll('#output .modifiable-input').forEach(input => { input.addEventListener('input', (e) => { const rowIndex = parseInt(e.target.dataset.rowIndex); const colIndex = parseInt(e.target.dataset.colIndex); if (rowIndex >= 0 && savedData[sheetName]?.[rowIndex + 1]) { savedData[sheetName][rowIndex + 1][colIndex] = e.target.value; } }); }); }
+/**
+ * Déclencher un enregistrement automatique après un délai
+ */
+function triggerAutoSave() {
+  // Annuler le timer précédent
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+  }
+  
+  // Créer un nouveau timer
+  autoSaveTimer = setTimeout(async () => {
+    const selectedMatiere = document.getElementById('matiereSelect').value;
+    if (!currentClass || !selectedMatiere || !savedData[selectedMatiere]) {
+      return;
+    }
+    
+    // Afficher un indicateur visuel discret
+    showSuccessMessage("💾 Enregistrement automatique...", 1000);
+    
+    try {
+      await saveTable(true); // Save silently
+      console.log('Auto-save completed for:', selectedMatiere);
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      showErrorMessage("Erreur d'enregistrement automatique. Veuillez enregistrer manuellement.");
+    }
+  }, AUTO_SAVE_DELAY);
+}
+
+function addEventListenersToTable(sheetName) { document.querySelectorAll('#output .modifiable-input').forEach(input => { input.addEventListener('input', (e) => { const rowIndex = parseInt(e.target.dataset.rowIndex); const colIndex = parseInt(e.target.dataset.colIndex); if (rowIndex >= 0 && savedData[sheetName]?.[rowIndex + 1]) { savedData[sheetName][rowIndex + 1][colIndex] = e.target.value; triggerAutoSave(); } }); }); }
 
 function populateFilterOptions() { const filterBy = document.getElementById('filterBy').value; const selectedMatiere = document.getElementById('matiereSelect').value; const filterOptionsSelect = document.getElementById('filterOptions'); filterOptionsSelect.innerHTML = ''; filterOptionsSelect.style.display = 'none'; if (!selectedMatiere || !filterBy || !savedData[selectedMatiere]) { return; } const columnIndex = {Mois: 0, Semaine: 1}[filterBy]; if (columnIndex === undefined) { return; } const options = new Set(); const data = savedData[selectedMatiere]; if (data && data.length > 1) { data.slice(1).forEach((row, i) => { const event = academicCalendar[i]; if (event) { const cellValue = (filterBy === 'Mois' ? event.month : event.week); if (cellValue) { options.add(cellValue); } } }); } if (options.size > 0) { filterOptionsSelect.style.display = 'inline-block'; filterOptionsSelect.innerHTML = '<option value="">Tous</option>'; Array.from(options).sort((a, b) => { if (filterBy === 'Semaine') { const aNum = parseInt(a.replace('Semaine ', '')); const bNum = parseInt(b.replace('Semaine ', '')); return aNum - bNum; } return a.localeCompare(b); }).forEach(optionValue => { filterOptionsSelect.innerHTML += `<option value="${optionValue}">${optionValue}</option>`; }); } applyFilter(); }
 

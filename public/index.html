@@ -165,7 +165,7 @@
 <!-- Écran d'accueil -->
 <div id="initialSelection" class="fade-in">
     <div class="logo-container" style="text-align: center; margin-bottom: 20px;">
-        <img src="logo-ecole.png" alt="Logo de l'école" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+        <img src="logo-ecole.png" alt="Logo de l'école" style="max-width: 200px; width: 200px; height: 200px; margin-bottom: 10px; object-fit: cover;">
     </div>
     <h1 style="color: white; text-align: center; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Distribution Annuelle 2025-2026</h1>
     
@@ -303,8 +303,8 @@
 
 <!-- Vue de classe -->
 <div id="classView" style="display: none;" class="card accent slide-in">
-    <div style="text-align: center; margin-bottom: 15px;">
-        <img src="logo-ecole.png" alt="Logo de l'école" style="max-width: 150px; height: auto;">
+    <div class="logo-container" style="text-align: center; margin-bottom: 15px;">
+        <img src="logo-ecole.png" alt="Logo de l'école" style="max-width: 150px; width: 150px; height: 150px; object-fit: cover;">
     </div>
     <h1 id="classTitle"></h1>
     <button onclick="showInitialSelection()" class="secondary"><i class="ri-arrow-go-back-line"></i> Changer de Classe</button>
@@ -368,6 +368,9 @@ Exercice 4: Construction de triangles (pages 17-22)"></textarea>
         <button onclick="resetCurrentMatiere()" class="danger"><i class="ri-refresh-line"></i> Réinitialiser</button>
         <button onclick="document.getElementById('excelUploadInput').click()" class="info"><i class="ri-upload-2-line"></i> Importer Excel</button>
         <input type="file" id="excelUploadInput" style="display: none;" onchange="handleFileUpload(event)" accept=".xlsx, .xls">
+        <span id="autoSaveIndicator" style="margin-left: 15px; color: #10b981; font-size: 14px; font-weight: 500; display: none;">
+            <i class="ri-checkbox-circle-fill"></i> Enregistrement automatique activé
+        </span>
     </div>
     
     <div>

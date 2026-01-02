@@ -34,14 +34,15 @@ h1 {
   letter-spacing: .2px;
 }
 
-/* Logo arrondi avec animation */
-.logo-container img {
-  border-radius: 50%;
+/* Logo circulaire dans toutes les pages et sections */
+img[src*="logo-ecole"], img[alt*="Logo"], .logo-container img {
+  border-radius: 50% !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transition: transform 0.3s ease;
+  object-fit: cover;
 }
 
-.logo-container img:hover {
+img[src*="logo-ecole"]:hover, img[alt*="Logo"]:hover, .logo-container img:hover {
   transform: scale(1.05);
 }
 
