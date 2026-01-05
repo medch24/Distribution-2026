@@ -277,15 +277,23 @@ app.post('/generatePdfOnServer', async (req, res) => {
 
 // === Données principales ===
 app.post('/saveTable', async (req, res) => {
-  const { className, sheetName, data } = req.body || {};
+  const { className, sheetName, data, createBackup } = req.body || {};
   if (!className || !sheetName || !data) return res.status(400).json({ error: 'Missing data.' });
   try {
     const db = await connectToClassDatabase(className);
     if (!db) return res.status(500).json({ error: `Cannot connect to DB for ${className}` });
+    
+    // Mise à jour (ou insertion) dans la collection principale
+    // upsert: true = UPDATE si existe, INSERT si n'existe pas
     await db.collection('tables').updateOne({ sheetName }, { $set: { data } }, { upsert: true });
-    const allTables = await db.collection('tables').find().toArray();
-    const formatted = allTables.map(t => ({ matiere: t.sheetName, data: t.data }));
-    await db.collection('savedCopies').insertOne({ timestamp: new Date(), tables: formatted });
+    
+    // Créer une copie backup SEULEMENT si demandé explicitement (pas pour l'auto-save)
+    if (createBackup === true) {
+      const allTables = await db.collection('tables').find().toArray();
+      const formatted = allTables.map(t => ({ matiere: t.sheetName, data: t.data }));
+      await db.collection('savedCopies').insertOne({ timestamp: new Date(), tables: formatted });
+    }
+    
     // also persist selections if present in payload in future
     broadcast('refresh', { className, sheetName, ts: Date.now() });
     res.json({ success: true });

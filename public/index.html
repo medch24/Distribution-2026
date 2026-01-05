@@ -365,7 +365,7 @@ Exercice 4: Construction de triangles (pages 17-22)"></textarea>
     <div class="button-container" style="margin: 20px 0;">
         <button onclick="generateExcel()" class="primary"><i class="ri-file-excel-2-line"></i> Excel</button>
         <button onclick="generateWord()" class="primary"><i class="ri-file-word-2-line"></i> Word</button>
-        <button onclick="saveTable()" class="primary"><i class="ri-save-3-line"></i> Enregistrer</button>
+        <button onclick="saveTable(false, true)" class="primary"><i class="ri-save-3-line"></i> Enregistrer</button>
         <button onclick="resetCurrentMatiere()" class="danger"><i class="ri-refresh-line"></i> Réinitialiser</button>
         <button onclick="document.getElementById('excelUploadInput').click()" class="info"><i class="ri-upload-2-line"></i> Importer Excel</button>
         <input type="file" id="excelUploadInput" style="display: none;" onchange="handleFileUpload(event)" accept=".xlsx, .xls">

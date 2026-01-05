@@ -380,7 +380,7 @@ async function resetCurrentMatiere() { const selectedMatiere = document.getEleme
 
 async function heartbeatPresence() { try { if (!presenceKey) return; await apiCall('presence/heartbeat', { className: presenceKey.split(':')[0], sheetName: presenceKey.split(':')[1], userId: currentUserId }); } catch (_) {} }
 
-async function saveTable(isSilent = false) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere || !savedData[selectedMatiere]) { if (!isSilent) alert("Veuillez sélectionner une classe et une matière."); return; } if (savedData[selectedMatiere].length <= 1) { if (!isSilent) alert("Aucune donnée à enregistrer."); return; } if (!isSilent) showProgressBar(); try { const ack = await apiCall('saveTable', { className: currentClass, sheetName: selectedMatiere, data: savedData[selectedMatiere] }); if (ack.success) { if (!isSilent) showSuccessMessage("Modifications enregistrées avec succès!"); } } catch (error) { if (!isSilent) showErrorMessage("Erreur lors de l'enregistrement: " + error.message); } finally { if (!isSilent) hideProgressBar(); } }
+async function saveTable(isSilent = false, createBackup = false) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere || !savedData[selectedMatiere]) { if (!isSilent) alert("Veuillez sélectionner une classe et une matière."); return; } if (savedData[selectedMatiere].length <= 1) { if (!isSilent) alert("Aucune donnée à enregistrer."); return; } if (!isSilent) showProgressBar(); try { const ack = await apiCall('saveTable', { className: currentClass, sheetName: selectedMatiere, data: savedData[selectedMatiere], createBackup: createBackup }); if (ack.success) { if (!isSilent) showSuccessMessage("Modifications enregistrées avec succès!"); } } catch (error) { if (!isSilent) showErrorMessage("Erreur lors de l'enregistrement: " + error.message); } finally { if (!isSilent) hideProgressBar(); } }
 
 async function deleteMatiereData() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière à supprimer."); return; } if (confirm(`Êtes-vous sûr de vouloir supprimer TOUTES les données pour la matière "${selectedMatiere}" dans la classe ${currentClass} ?\nCette action est irréversible.`)) { showProgressBar(); try { const ack = await apiCall('deleteMatiereData', { className: currentClass, sheetName: selectedMatiere }); if (ack.success) { alert(`Les données pour la matière "${selectedMatiere}" ont été supprimées.`); savedData[selectedMatiere] = generateInitialData(); displaySelectedTable(); } } catch (error) { alert("Erreur lors de la suppression des données : " + error.message); } finally { hideProgressBar(); } } }
 
@@ -533,6 +533,7 @@ function prepareExcelDataForSubject(subjectName) {
    const exportHeaders = ["Mois", "Semaine", "Séance", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"]; const dataForExport = [exportHeaders]; let sessionCounters = {}; let weekMaxSessions = {}; const baseClass = getBaseClassName(currentClass); const baseSessionsPerWeek = (classSessionCounts[baseClass] && classSessionCounts[baseClass][subjectName]) || 5; 
   
   // Utiliser la MÊME logique que renderTable pour l'export
+  // MODIFICATION: N'exporter QUE les lignes de type "Cours" et "evaluation"
   sheetData.slice(1).forEach((row, dataIndex) => { 
     const event = academicCalendar[dataIndex]; 
     if (!event) return; 
@@ -550,9 +551,19 @@ function prepareExcelDataForSubject(subjectName) {
     if (!sessionCounters[weekValue]) sessionCounters[weekValue] = 0; 
     const sessionsPerWeek = weekMaxSessions[weekValue]; 
     const isSpecialEvent = !isPlannable(event);
+    const eventType = event.type.toLowerCase();
     
-    // Si c'est un jour spécial, exporter la ligne avec le type d'événement
-    if (isSpecialEvent) { 
+    // FILTRE: Exporter SEULEMENT "Cours" et "evaluation"
+    // Exclure: Vacances, Examens, Orientation, Jours fériés, etc.
+    const shouldExport = isPlannable(event) || eventType.includes('evaluation') || eventType.includes('évaluation');
+    
+    if (!shouldExport) {
+      // Ignorer cette ligne (vacances, examens, jours fériés, etc.)
+      return;
+    }
+    
+    // Si c'est une évaluation, exporter comme ligne spéciale
+    if (isSpecialEvent && (eventType.includes('evaluation') || eventType.includes('évaluation'))) { 
       dataForExport.push([ 
         monthAbbreviations[row[0]] || row[0] || '', 
         '', 
@@ -560,8 +571,8 @@ function prepareExcelDataForSubject(subjectName) {
         event.type, 
         '', '', '', '', '', '' 
       ]); 
-    } else {
-      // Si c'est un jour plannable, utiliser la MÊME logique que renderTable
+    } else if (isPlannable(event)) {
+      // Si c'est un jour plannable (Cours), utiliser la MÊME logique que renderTable
       const remainingSessions = sessionsPerWeek - sessionCounters[weekValue];
       if (remainingSessions > 0) {
         const remainingDays = sheetData.slice(1).slice(dataIndex).filter((r, i) => {
