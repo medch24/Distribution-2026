@@ -4,9 +4,9 @@ let currentIsBoysSection = false;
 let currentUserId = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random())).toString();
 let sse; let presenceKey = null; let presenceTimer = null;
 
-// Debounce timer pour l'enregistrement automatique
-let autoSaveTimer = null;
-const AUTO_SAVE_DELAY = 1500; // 1.5 secondes après la dernière frappe
+// AUTO-SAVE DÉSACTIVÉ - Enregistrement manuel uniquement
+// Variable pour tracker si des modifications ont été faites
+let hasUnsavedChanges = false;
 
 const standardHeaders = ["Mois", "Semaine", "Date", "Jour", "Unité/Chapitre", "Contenu de la leçon", "Ressources pour les leçons", "Devoir", "Ressources pour les devoirs", "Recherche", "Projets"];
 const monthAbbreviations = { 'Janvier': 'Janv.', 'Février': 'Févr.', 'Mars': 'Mars', 'Avril': 'Avr.', 'Mai': 'Mai', 'Juin': 'Juin', 'Juillet': 'Juil.', 'Août': 'Août', 'Septembre': 'Sept.', 'Octobre': 'Oct.', 'Novembre': 'Nov.', 'Décembre': 'Déc.' }; 
@@ -380,7 +380,7 @@ async function resetCurrentMatiere() { const selectedMatiere = document.getEleme
 
 async function heartbeatPresence() { try { if (!presenceKey) return; await apiCall('presence/heartbeat', { className: presenceKey.split(':')[0], sheetName: presenceKey.split(':')[1], userId: currentUserId }); } catch (_) {} }
 
-async function saveTable(isSilent = false, createBackup = false) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere || !savedData[selectedMatiere]) { if (!isSilent) alert("Veuillez sélectionner une classe et une matière."); return; } if (savedData[selectedMatiere].length <= 1) { if (!isSilent) alert("Aucune donnée à enregistrer."); return; } if (!isSilent) showProgressBar(); try { const ack = await apiCall('saveTable', { className: currentClass, sheetName: selectedMatiere, data: savedData[selectedMatiere], createBackup: createBackup }); if (ack.success) { if (!isSilent) showSuccessMessage("Modifications enregistrées avec succès!"); } } catch (error) { if (!isSilent) showErrorMessage("Erreur lors de l'enregistrement: " + error.message); } finally { if (!isSilent) hideProgressBar(); } }
+async function saveTable(isSilent = false, createBackup = false) { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere || !savedData[selectedMatiere]) { if (!isSilent) alert("Veuillez sélectionner une classe et une matière."); return; } if (savedData[selectedMatiere].length <= 1) { if (!isSilent) alert("Aucune donnée à enregistrer."); return; } if (!isSilent) showProgressBar(); try { const ack = await apiCall('saveTable', { className: currentClass, sheetName: selectedMatiere, data: savedData[selectedMatiere], createBackup: createBackup }); if (ack.success) { hideUnsavedIndicator(); if (!isSilent) showSuccessMessage("Modifications enregistrées avec succès!"); } } catch (error) { if (!isSilent) showErrorMessage("Erreur lors de l'enregistrement: " + error.message); } finally { if (!isSilent) hideProgressBar(); } }
 
 async function deleteMatiereData() { const selectedMatiere = document.getElementById('matiereSelect').value; if (!currentClass || !selectedMatiere) { alert("Veuillez sélectionner une classe et une matière à supprimer."); return; } if (confirm(`Êtes-vous sûr de vouloir supprimer TOUTES les données pour la matière "${selectedMatiere}" dans la classe ${currentClass} ?\nCette action est irréversible.`)) { showProgressBar(); try { const ack = await apiCall('deleteMatiereData', { className: currentClass, sheetName: selectedMatiere }); if (ack.success) { alert(`Les données pour la matière "${selectedMatiere}" ont été supprimées.`); savedData[selectedMatiere] = generateInitialData(); displaySelectedTable(); } } catch (error) { alert("Erreur lors de la suppression des données : " + error.message); } finally { hideProgressBar(); } } }
 
@@ -447,33 +447,39 @@ function renderTable(sheetName, jsonData) { const output = document.getElementBy
 /**
  * Déclencher un enregistrement automatique après un délai
  */
-function triggerAutoSave() {
-  // Annuler le timer précédent
-  if (autoSaveTimer) {
-    clearTimeout(autoSaveTimer);
-  }
-  
-  // Créer un nouveau timer
-  autoSaveTimer = setTimeout(async () => {
-    const selectedMatiere = document.getElementById('matiereSelect').value;
-    if (!currentClass || !selectedMatiere || !savedData[selectedMatiere]) {
-      return;
-    }
-    
-    // Afficher un indicateur visuel discret
-    showSuccessMessage("💾 Enregistrement automatique...", 1000);
-    
-    try {
-      await saveTable(true); // Save silently
-      console.log('Auto-save completed for:', selectedMatiere);
-    } catch (error) {
-      console.error('Auto-save failed:', error);
-      showErrorMessage("Erreur d'enregistrement automatique. Veuillez enregistrer manuellement.");
-    }
-  }, AUTO_SAVE_DELAY);
+// Fonction pour marquer qu'il y a des modifications non sauvegardées
+function markAsModified() {
+  hasUnsavedChanges = true;
+  // Afficher un indicateur visuel
+  showUnsavedIndicator();
 }
 
-function addEventListenersToTable(sheetName) { document.querySelectorAll('#output .modifiable-input').forEach(input => { input.addEventListener('input', (e) => { const rowIndex = parseInt(e.target.dataset.rowIndex); const colIndex = parseInt(e.target.dataset.colIndex); if (rowIndex >= 0 && savedData[sheetName]?.[rowIndex + 1]) { savedData[sheetName][rowIndex + 1][colIndex] = e.target.value; triggerAutoSave(); } }); }); }
+// Fonction pour afficher l'indicateur de modifications non sauvegardées
+function showUnsavedIndicator() {
+  let indicator = document.getElementById('unsavedIndicator');
+  if (!indicator) {
+    indicator = document.createElement('span');
+    indicator.id = 'unsavedIndicator';
+    indicator.style.cssText = 'margin-left: 15px; color: #f59e0b; font-size: 14px; font-weight: 500;';
+    indicator.innerHTML = '<i class="ri-alert-line"></i> Modifications non sauvegardées';
+    const buttonContainer = document.querySelector('.button-container');
+    if (buttonContainer) {
+      buttonContainer.appendChild(indicator);
+    }
+  }
+  indicator.style.display = 'inline';
+}
+
+// Fonction pour cacher l'indicateur après sauvegarde
+function hideUnsavedIndicator() {
+  const indicator = document.getElementById('unsavedIndicator');
+  if (indicator) {
+    indicator.style.display = 'none';
+  }
+  hasUnsavedChanges = false;
+}
+
+function addEventListenersToTable(sheetName) { document.querySelectorAll('#output .modifiable-input').forEach(input => { input.addEventListener('input', (e) => { const rowIndex = parseInt(e.target.dataset.rowIndex); const colIndex = parseInt(e.target.dataset.colIndex); if (rowIndex >= 0 && savedData[sheetName]?.[rowIndex + 1]) { savedData[sheetName][rowIndex + 1][colIndex] = e.target.value; markAsModified(); } }); }); }
 
 function populateFilterOptions() { const filterBy = document.getElementById('filterBy').value; const selectedMatiere = document.getElementById('matiereSelect').value; const filterOptionsSelect = document.getElementById('filterOptions'); filterOptionsSelect.innerHTML = ''; filterOptionsSelect.style.display = 'none'; if (!selectedMatiere || !filterBy || !savedData[selectedMatiere]) { return; } const columnIndex = {Mois: 0, Semaine: 1}[filterBy]; if (columnIndex === undefined) { return; } const options = new Set(); const data = savedData[selectedMatiere]; if (data && data.length > 1) { data.slice(1).forEach((row, i) => { const event = academicCalendar[i]; if (event) { const cellValue = (filterBy === 'Mois' ? event.month : event.week); if (cellValue) { options.add(cellValue); } } }); } if (options.size > 0) { filterOptionsSelect.style.display = 'inline-block'; filterOptionsSelect.innerHTML = '<option value="">Tous</option>'; Array.from(options).sort((a, b) => { if (filterBy === 'Semaine') { const aNum = parseInt(a.replace('Semaine ', '')); const bNum = parseInt(b.replace('Semaine ', '')); return aNum - bNum; } return a.localeCompare(b); }).forEach(optionValue => { filterOptionsSelect.innerHTML += `<option value="${optionValue}">${optionValue}</option>`; }); } applyFilter(); }
 
@@ -858,4 +864,22 @@ function toggleAIForm() {
       document.getElementById('cahierSummary').value = '';
     }
   }
+}
+
+// Avertissement avant de quitter si modifications non sauvegardées
+window.addEventListener('beforeunload', (e) => {
+  if (hasUnsavedChanges) {
+    const message = 'Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter?';
+    e.preventDefault();
+    e.returnValue = message;
+    return message;
+  }
+});
+
+// Avertissement lors du changement de classe ou matière
+function warnIfUnsaved() {
+  if (hasUnsavedChanges) {
+    return confirm('Vous avez des modifications non sauvegardées. Voulez-vous vraiment changer sans enregistrer?');
+  }
+  return true;
 }
