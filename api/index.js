@@ -555,15 +555,16 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
     // Créer une feuille unique avec toutes les données
     const worksheet = workbook.addWorksheet('Distribution Hebdomadaire');
     
-    // Format: Classe, Matière, Période, Leçon, Travaux de classe, Support (leçon), Devoirs (fusionner Devoirs et Support devoirs)
+    // Format demandé: Classe, Matiere, Séance, Unité/Chapitre, Contenu de la leçon, Ressources (Leçons), Devoir, Ressources (Devoirs)
     worksheet.columns = [
       { header: 'Classe', key: 'classe', width: 12 },
-      { header: 'Matière', key: 'matiere', width: 25 },
-      { header: 'Période', key: 'periode', width: 15 },
-      { header: 'Leçon', key: 'lecon', width: 30 },
-      { header: 'Travaux de classe', key: 'travaux', width: 30 },
-      { header: 'Support (leçon)', key: 'support_lecon', width: 25 },
-      { header: 'Devoirs', key: 'devoirs', width: 40 }
+      { header: 'Matiere', key: 'matiere', width: 25 },
+      { header: 'Séan.', key: 'seance', width: 12 },
+      { header: 'Unité/Chapitre', key: 'unite_chapitre', width: 30 },
+      { header: 'Contenu de la leçon', key: 'contenu_lecon', width: 35 },
+      { header: 'Ressources (Leçons)', key: 'ressources_lecons', width: 25 },
+      { header: 'Devoir', key: 'devoir', width: 30 },
+      { header: 'Ressources (Devoirs)', key: 'ressources_devoirs', width: 25 }
     ];
     
     // Styliser l'en-tête
@@ -608,52 +609,31 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
           const data = await collection.find({ 
             'Semaine': week,
             'type': 'Cours'
-          }).limit(100).toArray();
+          }).sort({ 'Date': 1 }).limit(100).toArray();
           
           if (!data || data.length === 0) continue;
           
           classHasData = true;
           
-          // Grouper par période (séance)
-          const sessions = {};
-          data.forEach(row => {
-            const periode = row['Date'] || 'N/A';
-            if (!sessions[periode]) {
-              sessions[periode] = {
-                lecon: row['Contenu de la leçon'] || '',
-                travaux: row['Unité/Chapitre'] || '',
-                support_lecon: row['Ressources pour les leçons'] || '',
-                devoir: row['Devoir'] || '',
-                support_devoir: row['Ressources pour les devoirs'] || ''
-              };
-            }
-          });
+          // Compteur de séances pour cette matière
+          let seanceCounter = 1;
           
-          // Ajouter les lignes au worksheet
-          Object.entries(sessions).forEach(([periode, session]) => {
-            // Fusionner Devoirs et Support devoirs
-            let devoirsCombined = '';
-            if (session.devoir && session.support_devoir) {
-              devoirsCombined = `${session.devoir} (Support: ${session.support_devoir})`;
-            } else if (session.devoir) {
-              devoirsCombined = session.devoir;
-            } else if (session.support_devoir) {
-              devoirsCombined = `Support: ${session.support_devoir}`;
-            }
-            
-            const row = worksheet.addRow({
+          // Ajouter chaque séance au worksheet
+          data.forEach(row => {
+            const rowData = worksheet.addRow({
               classe: className.replace('-G', ' (Garçons)'),
               matiere: subject,
-              periode: periode,
-              lecon: session.lecon,
-              travaux: session.travaux,
-              support_lecon: session.support_lecon,
-              devoirs: devoirsCombined
+              seance: `Séance ${seanceCounter}`,
+              unite_chapitre: row['Unité/Chapitre'] || '',
+              contenu_lecon: row['Contenu de la leçon'] || '',
+              ressources_lecons: row['Ressources pour les leçons'] || '',
+              devoir: row['Devoir'] || '',
+              ressources_devoirs: row['Ressources pour les devoirs'] || ''
             });
             
             // Alterner les couleurs des lignes
             if (rowCount % 2 === 0) {
-              row.eachCell((cell) => {
+              rowData.eachCell((cell) => {
                 cell.fill = {
                   type: 'pattern',
                   pattern: 'solid',
@@ -663,7 +643,7 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
             }
             
             // Bordures
-            row.eachCell((cell) => {
+            rowData.eachCell((cell) => {
               cell.border = {
                 top: { style: 'thin' },
                 left: { style: 'thin' },
@@ -674,6 +654,7 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
             });
             
             rowCount++;
+            seanceCounter++;
           });
         } catch (err) {
           console.error(`[downloadWeeklyExcel] Erreur pour ${className} - ${subject}:`, err.message);
