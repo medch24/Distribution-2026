@@ -38,6 +38,17 @@ Le système calcule automatiquement le nombre de séances par semaine en respect
 - **Import** : Excel (.xlsx), Word (.docx)
 - **Export** : Excel, Word, PDF
 - Export individuel ou par classe complète
+- **🆕 Export Hebdomadaire Excel** : Télécharger toutes les distributions d'une semaine par section
+
+### 📊 Téléchargement Excel Hebdomadaire (NOUVEAU)
+- **Sélection par Section** : Choisir Maternelle, Primaire, Secondaire, ou Secondaire Garçons
+- **Sélection de Semaine** : 31 semaines disponibles (Semaine 1 à 31)
+- **Format Structuré** : Classe | Matière | Période | Leçon | Travaux | Support | Devoirs
+- **Fichier Professionnel** : En-têtes colorés, lignes alternées, bordures
+- **Une Section à la Fois** : Génération optimisée par section pour éviter les timeouts
+
+> 📖 **Configuration requise** : MongoDB Atlas (gratuit)  
+> 📄 Voir [EXCEL_DOWNLOAD_SETUP.md](./EXCEL_DOWNLOAD_SETUP.md) pour les instructions complètes
 
 ### 🎨 Design Moderne
 - Interface responsive (mobile, tablette, desktop)
@@ -242,6 +253,16 @@ Les contributions sont les bienvenues !
 ---
 
 ## 📝 Changelog
+
+### Version 2.1.0 (12 janvier 2026)
+- ✅ **NOUVEAU** : Téléchargement Excel hebdomadaire par section
+- ✅ Sélection de semaine intégrée dans chaque section
+- ✅ Format Excel professionnel (en-têtes, couleurs, bordures)
+- ✅ Fusion automatique des colonnes Devoirs et Support devoirs
+- ✅ Optimisation MongoDB (requêtes filtrées, limit 100)
+- ✅ Gestion d'erreurs améliorée avec logs détaillés
+- ✅ Documentation complète de configuration
+- ✅ Support ExcelJS pour génération avancée
 
 ### Version 2.0.0 (25 décembre 2025)
 - ✅ Correction de l'actualisation automatique
