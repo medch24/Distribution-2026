@@ -484,6 +484,56 @@ app.post('/generateAIDistributionGemini', async (req, res) => {
   }
 });
 
+// === DEBUG : Voir la structure MongoDB ===
+app.post('/debugMongoData', async (req, res) => {
+  try {
+    const { className, subject } = req.body;
+    
+    if (!className || !subject) {
+      return res.status(400).json({ error: 'className et subject requis' });
+    }
+    
+    if (!MONGO_URL) {
+      return res.status(500).json({ error: 'MongoDB non configuré' });
+    }
+    
+    const db = await connectToClassDatabase(className);
+    if (!db) {
+      return res.status(500).json({ error: `Impossible de se connecter à la DB pour ${className}` });
+    }
+    
+    // Récupérer le document
+    const tableDoc = await db.collection('tables').findOne({ sheetName: subject });
+    
+    if (!tableDoc) {
+      return res.json({ 
+        found: false, 
+        message: `Aucun document trouvé pour ${className} - ${subject}` 
+      });
+    }
+    
+    // Retourner des informations sur le document
+    const result = {
+      found: true,
+      className,
+      subject,
+      totalRows: tableDoc.data ? tableDoc.data.length : 0,
+      sampleRows: tableDoc.data ? tableDoc.data.slice(0, 3) : [],
+      weekFields: tableDoc.data && tableDoc.data.length > 0 ? {
+        'Semaine': tableDoc.data[0]['Semaine'],
+        'Sem.': tableDoc.data[0]['Sem.'],
+        'week': tableDoc.data[0]['week'],
+        allFields: Object.keys(tableDoc.data[0])
+      } : null
+    };
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error in debugMongoData:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // === Download Weekly Excel for All Classes ===
 app.post('/downloadWeeklyExcel', async (req, res) => {
   try {
@@ -612,19 +662,37 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
             continue;
           }
           
+          console.log(`[downloadWeeklyExcel] Found table for ${className} - ${subject} with ${tableDoc.data.length} rows`);
+          
+          // Afficher un échantillon des données pour comprendre la structure
+          if (tableDoc.data.length > 0) {
+            console.log(`[downloadWeeklyExcel] Sample row:`, JSON.stringify(tableDoc.data[0], null, 2));
+            console.log(`[downloadWeeklyExcel] Week fields in sample:`, {
+              'Semaine': tableDoc.data[0]['Semaine'],
+              'Sem.': tableDoc.data[0]['Sem.'],
+              'week': tableDoc.data[0]['week']
+            });
+          }
+          
           // Filtrer les données pour la semaine demandée
           const data = tableDoc.data.filter(row => {
             if (!row || typeof row !== 'object') return false;
             
             // Vérifier différentes variantes du champ semaine
-            const semaine = row['Semaine'] || row['Sem.'] || '';
+            const semaine = row['Semaine'] || row['Sem.'] || row['week'] || '';
             
             // Comparer directement ou chercher le numéro
             if (semaine === week) return true;
             if (semaine.includes(week.replace('Semaine ', ''))) return true;
             
+            // Essayer aussi de comparer juste le numéro (ex: "S19" vs "Semaine 19")
+            const weekNum = week.match(/\d+/);
+            if (weekNum && semaine.includes(weekNum[0])) return true;
+            
             return false;
           });
+          
+          console.log(`[downloadWeeklyExcel] Filtered ${data.length} rows for ${className} - ${subject} - ${week}`);
           
           if (!data || data.length === 0) {
             console.log(`[downloadWeeklyExcel] No data found for ${className} - ${subject} - ${week}`);

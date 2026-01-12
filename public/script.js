@@ -1085,3 +1085,36 @@ async function downloadWeeklyExcel(section) {
     showErrorMessage('❌ Erreur lors de la génération du fichier Excel:\n\n' + error.message, 10000);
   }
 }
+
+// DEBUG: Vérifier la structure MongoDB
+async function debugMongoData(className, subject) {
+  try {
+    console.log(`[DEBUG] Checking MongoDB for ${className} - ${subject}`);
+    
+    const response = await fetch('/api/debugMongoData', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ className, subject })
+    });
+    
+    const result = await response.json();
+    console.log('[DEBUG] MongoDB Result:', result);
+    
+    if (result.found && result.sampleRows) {
+      console.log('[DEBUG] Sample rows:', result.sampleRows);
+      console.log('[DEBUG] Week fields:', result.weekFields);
+      console.log('[DEBUG] Total rows:', result.totalRows);
+    } else {
+      console.log('[DEBUG] No data found');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[DEBUG] Error:', error);
+    return null;
+  }
+}
+
+// Exposer la fonction globalement pour tests manuels
+window.debugMongoData = debugMongoData;
+
