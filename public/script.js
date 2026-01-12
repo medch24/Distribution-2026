@@ -250,8 +250,78 @@ const getBaseClassName = (className) => {
   return className ? className.replace('-G', '') : className;
 };
 
-function showErrorMessage(message, duration = 5000) { let errorDiv = document.getElementById('errorMessage'); if (!errorDiv) { errorDiv = document.createElement('div'); errorDiv.id = 'errorMessage'; errorDiv.style.cssText = `position: fixed; top: 20px; right: 20px; background-color: #fde8e8; color: #7f1d1d; padding: 15px; border: 1px solid #fecaca; border-radius: 5px; max-width: 400px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;`; document.body.appendChild(errorDiv); } errorDiv.textContent = message; errorDiv.style.display = 'block'; setTimeout(() => { if (errorDiv) errorDiv.style.display = 'none'; }, duration); }
-function showSuccessMessage(message, duration = 3000) { let successDiv = document.getElementById('successMessage'); if (!successDiv) { successDiv = document.createElement('div'); successDiv.id = 'successMessage'; successDiv.style.cssText = `position: fixed; top: 20px; right: 20px; background-color: #ecfdf5; color: #064e3b; padding: 15px; border: 1px solid #bbf7d0; border-radius: 5px; max-width: 400px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;`; document.body.appendChild(successDiv); } successDiv.textContent = message; successDiv.style.display = 'block'; setTimeout(() => { if (successDiv) successDiv.style.display = 'none'; }, duration); }
+function showErrorMessage(message, duration = 5000) { 
+  let errorDiv = document.getElementById('errorMessage'); 
+  if (!errorDiv) { 
+    errorDiv = document.createElement('div'); 
+    errorDiv.id = 'errorMessage'; 
+    errorDiv.style.cssText = `position: fixed; top: 20px; right: 20px; background-color: #fde8e8; color: #7f1d1d; padding: 15px; border: 1px solid #fecaca; border-radius: 5px; max-width: 500px; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; white-space: pre-wrap;`; 
+    document.body.appendChild(errorDiv); 
+  } 
+  errorDiv.innerHTML = message.replace(/\n/g, '<br>'); 
+  errorDiv.style.display = 'block'; 
+  setTimeout(() => { 
+    if (errorDiv) errorDiv.style.display = 'none'; 
+  }, duration); 
+}
+
+function showSuccessMessage(message, duration = 3000) { 
+  let successDiv = document.getElementById('successMessage'); 
+  if (!successDiv) { 
+    successDiv = document.createElement('div'); 
+    successDiv.id = 'successMessage'; 
+    successDiv.style.cssText = `position: fixed; top: 20px; right: 20px; background-color: #ecfdf5; color: #064e3b; padding: 15px; border: 1px solid #bbf7d0; border-radius: 5px; max-width: 500px; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;`; 
+    document.body.appendChild(successDiv); 
+  } 
+  successDiv.textContent = message; 
+  successDiv.style.display = 'block'; 
+  setTimeout(() => { 
+    if (successDiv) successDiv.style.display = 'none'; 
+  }, duration); 
+}
+
+/**
+ * Afficher une barre de progression avec pourcentage
+ */
+function showProgressWithPercentage(message, percentage) {
+  let progressDiv = document.getElementById('progressBarDownload');
+  if (!progressDiv) {
+    progressDiv = document.createElement('div');
+    progressDiv.id = 'progressBarDownload';
+    progressDiv.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10001; min-width: 400px; text-align: center;`;
+    document.body.appendChild(progressDiv);
+  }
+  
+  const percentNum = Math.min(100, Math.max(0, percentage));
+  
+  progressDiv.innerHTML = `
+    <div style="margin-bottom: 20px;">
+      <i class="ri-download-cloud-line" style="font-size: 3em; color: #10b981;"></i>
+    </div>
+    <div style="font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 15px;">
+      ${message}
+    </div>
+    <div style="background: #e5e7eb; border-radius: 10px; height: 30px; overflow: hidden; position: relative;">
+      <div style="background: linear-gradient(90deg, #10b981 0%, #059669 100%); height: 100%; width: ${percentNum}%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center;">
+        <span style="color: white; font-weight: bold; font-size: 14px; position: absolute; left: 50%; transform: translateX(-50%);">${percentNum}%</span>
+      </div>
+    </div>
+    <div style="margin-top: 15px; color: #6b7280; font-size: 14px;">
+      Veuillez patienter...
+    </div>
+  `;
+  progressDiv.style.display = 'block';
+}
+
+/**
+ * Cacher la barre de progression
+ */
+function hideProgressWithPercentage() {
+  const progressDiv = document.getElementById('progressBarDownload');
+  if (progressDiv) {
+    progressDiv.style.display = 'none';
+  }
+}
 
 async function apiCall(endpoint, payload) { try { const response = await fetch(`/api/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), }); if (!response.ok) { let errorMessage = `Erreur du serveur: ${response.status}`; try { const errorData = await response.json(); errorMessage = errorData.error || errorMessage; } catch (parseError) { errorMessage = response.statusText || errorMessage; } throw new Error(errorMessage); } if (endpoint === 'generatePdfOnServer') { return response.blob(); } return response.json(); } catch (error) { console.error(`Erreur API pour ${endpoint}:`, error); showErrorMessage(`Erreur: ${error.message}`); throw error; } }
 
@@ -932,13 +1002,18 @@ async function downloadWeeklyExcel(section) {
     return;
   }
   
-  showProgressBar();
   try {
+    // Étape 1: Initialisation
+    showProgressWithPercentage('Connexion au serveur...', 10);
+    
     const response = await fetch('/api/downloadWeeklyExcel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ week: selectedWeek, section: section })
     });
+    
+    // Étape 2: Vérification de la réponse
+    showProgressWithPercentage('Récupération des données...', 30);
     
     if (!response.ok) {
       let errorMessage = `Erreur du serveur: ${response.status}`;
@@ -949,15 +1024,39 @@ async function downloadWeeklyExcel(section) {
         // Afficher les détails supplémentaires si disponibles
         if (errorData.details) {
           console.error('Détails de l\'erreur:', errorData.details);
-          errorMessage += `\n\nDétails:\n- Classes traitées: ${errorData.details.classesProcessed || 0}\n- Classes avec données: ${errorData.details.classesWithData || 0}\n- MongoDB configuré: ${errorData.details.mongoConfigured ? 'Oui' : 'Non'}`;
+          const details = errorData.details;
+          errorMessage += `\n\n📊 Détails du traitement:\n`;
+          errorMessage += `• Classes traitées: ${details.classesProcessed || 0}\n`;
+          errorMessage += `• Classes avec données: ${details.classesWithData || 0}\n`;
+          errorMessage += `• MongoDB configuré: ${details.mongoConfigured ? '✅ Oui' : '❌ Non'}\n`;
+          
+          if (details.classesProcessed > 0 && details.classesWithData === 0) {
+            errorMessage += `\n⚠️ Aucune donnée trouvée pour "${selectedWeek}".\n`;
+            errorMessage += `Veuillez d'abord enregistrer des distributions pour cette semaine.`;
+          }
         }
       } catch (e) {
         // Erreur lors du parsing JSON
+        console.error('Erreur parsing:', e);
       }
+      hideProgressWithPercentage();
       throw new Error(errorMessage);
     }
     
+    // Étape 3: Génération du fichier
+    showProgressWithPercentage('Génération du fichier Excel...', 60);
+    
     const blob = await response.blob();
+    
+    // Vérifier si le blob est vide
+    if (blob.size === 0) {
+      hideProgressWithPercentage();
+      throw new Error('Le fichier généré est vide. Aucune donnée disponible pour cette semaine.');
+    }
+    
+    // Étape 4: Téléchargement
+    showProgressWithPercentage('Préparation du téléchargement...', 90);
+    
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.style.display = 'none';
@@ -965,14 +1064,24 @@ async function downloadWeeklyExcel(section) {
     a.download = `Distribution_${sectionName.replace(/\s+/g, '_')}_${selectedWeek.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
     
-    showSuccessMessage(`Fichier Excel pour "${selectedWeek}" (${sectionName}) téléchargé avec succès!`);
+    // Nettoyage
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 100);
+    
+    // Étape 5: Terminé
+    showProgressWithPercentage('Téléchargement terminé!', 100);
+    
+    setTimeout(() => {
+      hideProgressWithPercentage();
+      showSuccessMessage(`✅ Fichier Excel téléchargé avec succès!\n📁 ${a.download}`);
+    }, 500);
+    
   } catch (error) {
     console.error('Erreur lors du téléchargement Excel hebdomadaire:', error);
-    showErrorMessage('Erreur lors de la génération du fichier Excel: ' + error.message);
-  } finally {
-    hideProgressBar();
+    hideProgressWithPercentage();
+    showErrorMessage('❌ Erreur lors de la génération du fichier Excel:\n\n' + error.message, 10000);
   }
 }
