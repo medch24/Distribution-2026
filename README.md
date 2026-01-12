@@ -43,9 +43,11 @@ Le système calcule automatiquement le nombre de séances par semaine en respect
 ### 📊 Téléchargement Excel Hebdomadaire (NOUVEAU)
 - **Sélection par Section** : Choisir Maternelle, Primaire, Secondaire, ou Secondaire Garçons
 - **Sélection de Semaine** : 31 semaines disponibles (Semaine 1 à 31)
-- **Format Structuré** : Classe | Matière | Période | Leçon | Travaux | Support | Devoirs
+- **Format Structuré** : Classe | Matiere | Séan. | Unité/Chapitre | Contenu de la leçon | Ressources (Leçons) | Devoir | Ressources (Devoirs)
+- **Numérotation Automatique** : Séances numérotées séquentiellement (Séance 1, 2, 3...)
 - **Fichier Professionnel** : En-têtes colorés, lignes alternées, bordures
 - **Une Section à la Fois** : Génération optimisée par section pour éviter les timeouts
+- **Barre de Progression** : Suivi en temps réel avec pourcentage (10% → 100%)
 
 > 📖 **Configuration requise** : MongoDB Atlas (gratuit)  
 > 📄 Voir [EXCEL_DOWNLOAD_SETUP.md](./EXCEL_DOWNLOAD_SETUP.md) pour les instructions complètes
@@ -254,11 +256,18 @@ Les contributions sont les bienvenues !
 
 ## 📝 Changelog
 
+### Version 2.1.1 (12 janvier 2026)
+- ✅ **Correction format Excel** : Format conforme aux exigences
+- ✅ Colonnes: Classe, Matiere, Séan., Unité/Chapitre, Contenu de la leçon, Ressources (Leçons), Devoir, Ressources (Devoirs)
+- ✅ Numérotation séquentielle des séances par matière
+- ✅ Tri chronologique des séances par date
+- ✅ Colonnes Devoir et Ressources séparées (non fusionnées)
+
 ### Version 2.1.0 (12 janvier 2026)
 - ✅ **NOUVEAU** : Téléchargement Excel hebdomadaire par section
 - ✅ Sélection de semaine intégrée dans chaque section
 - ✅ Format Excel professionnel (en-têtes, couleurs, bordures)
-- ✅ Fusion automatique des colonnes Devoirs et Support devoirs
+- ✅ Barre de progression avec pourcentage (10% → 100%)
 - ✅ Optimisation MongoDB (requêtes filtrées, limit 100)
 - ✅ Gestion d'erreurs améliorée avec logs détaillés
 - ✅ Documentation complète de configuration

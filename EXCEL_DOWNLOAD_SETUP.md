@@ -76,12 +76,19 @@ Le fichier Excel généré contient les colonnes suivantes :
 | Colonne | Description |
 |---------|-------------|
 | **Classe** | Nom de la classe (ex: PP1, PEI2-G) |
-| **Matière** | Nom de la matière (ex: Français, Maths) |
-| **Période** | Date de la séance |
-| **Leçon** | Contenu de la leçon |
-| **Travaux de classe** | Unité/Chapitre |
-| **Support (leçon)** | Ressources pour les leçons |
-| **Devoirs** | Devoirs + Support devoirs (fusionnés) |
+| **Matiere** | Nom de la matière (ex: Français, Maths) |
+| **Séan.** | Numéro de séance (Séance 1, Séance 2, ...) |
+| **Unité/Chapitre** | Unité ou chapitre étudié |
+| **Contenu de la leçon** | Description du contenu de la leçon |
+| **Ressources (Leçons)** | Ressources utilisées pour les leçons |
+| **Devoir** | Devoirs assignés aux élèves |
+| **Ressources (Devoirs)** | Ressources pour les devoirs |
+
+### ℹ️ Notes sur les Séances
+
+- Les séances sont numérotées séquentiellement par matière (Séance 1, Séance 2, Séance 3...)
+- Le compteur redémarre à 1 pour chaque nouvelle matière
+- Les séances sont triées par date dans l'ordre chronologique
 
 ### Style du fichier
 
