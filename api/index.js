@@ -605,30 +605,52 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
       for (const subject of subjects) {
         try {
           const collection = db.collection(subject);
-          // Optimisation: filtrer directement dans MongoDB au lieu de tout charger
-          const data = await collection.find({ 
-            'Semaine': week,
-            'type': 'Cours'
-          }).sort({ 'Date': 1 }).limit(100).toArray();
           
-          if (!data || data.length === 0) continue;
+          // Chercher d'abord avec 'Semaine', puis essayer 'Sem.' si aucun résultat
+          let data = await collection.find({ 
+            'Semaine': week
+          }).sort({ 'Séan.': 1 }).limit(100).toArray();
+          
+          // Si aucun résultat, essayer avec 'Sem.'
+          if (!data || data.length === 0) {
+            data = await collection.find({ 
+              'Sem.': week
+            }).sort({ 'Séan.': 1 }).limit(100).toArray();
+          }
+          
+          // Si toujours rien, essayer sans filtre de type
+          if (!data || data.length === 0) {
+            // Peut-être que la semaine est stockée différemment
+            const allData = await collection.find({}).limit(200).toArray();
+            console.log(`[downloadWeeklyExcel] Sample data for ${className}-${subject}:`, allData.slice(0, 2));
+            
+            // Filtrer manuellement
+            data = allData.filter(row => {
+              const semaine = row['Semaine'] || row['Sem.'] || '';
+              return semaine === week || semaine.includes(week.replace('Semaine ', ''));
+            });
+          }
+          
+          if (!data || data.length === 0) {
+            console.log(`[downloadWeeklyExcel] No data found for ${className} - ${subject} - ${week}`);
+            continue;
+          }
           
           classHasData = true;
+          console.log(`[downloadWeeklyExcel] Found ${data.length} sessions for ${className} - ${subject}`);
           
-          // Compteur de séances pour cette matière
-          let seanceCounter = 1;
-          
-          // Ajouter chaque séance au worksheet
+          // Utiliser le numéro de séance existant ou créer un compteur
           data.forEach(row => {
+            const seanceNum = row['Séan.'] || row['Seance'] || row['Séance'] || '';
             const rowData = worksheet.addRow({
               classe: className.replace('-G', ' (Garçons)'),
               matiere: subject,
-              seance: `Séance ${seanceCounter}`,
+              seance: seanceNum,
               unite_chapitre: row['Unité/Chapitre'] || '',
               contenu_lecon: row['Contenu de la leçon'] || '',
-              ressources_lecons: row['Ressources pour les leçons'] || '',
+              ressources_lecons: row['Ressources (Leçons)'] || row['Ressources pour les leçons'] || '',
               devoir: row['Devoir'] || '',
-              ressources_devoirs: row['Ressources pour les devoirs'] || ''
+              ressources_devoirs: row['Ressources (Devoirs)'] || row['Ressources pour les devoirs'] || ''
             });
             
             // Alterner les couleurs des lignes
@@ -654,7 +676,6 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
             });
             
             rowCount++;
-            seanceCounter++;
           });
         } catch (err) {
           console.error(`[downloadWeeklyExcel] Erreur pour ${className} - ${subject}:`, err.message);
