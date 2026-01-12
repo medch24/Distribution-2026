@@ -170,56 +170,6 @@
     </div>
     <h1 style="color: white; text-align: center; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Distribution Annuelle 2025-2026</h1>
     
-    <!-- Section Téléchargement Excel par Semaine -->
-    <div style="background: white; border-radius: 15px; padding: 30px; margin: 30px auto; max-width: 800px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-        <h2 style="color: #1f2937; text-align: center; margin-bottom: 20px;">
-            <i class="ri-file-excel-2-line" style="color: #10b981;"></i> 
-            Télécharger Distribution Hebdomadaire (Excel)
-        </h2>
-        <p style="color: #6b7280; text-align: center; margin-bottom: 25px;">
-            Sélectionnez une semaine pour télécharger toutes les distributions de toutes les classes et matières
-        </p>
-        <div style="display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap;">
-            <label for="weekSelect" style="font-weight: bold; color: #1f2937;">Choisir la semaine :</label>
-            <select id="weekSelect" style="padding: 12px 20px; border-radius: 8px; border: 2px solid #d1d5db; font-size: 16px; min-width: 200px; cursor: pointer;">
-                <option value="">-- Sélectionner une semaine --</option>
-                <option value="Semaine 1">Semaine 1</option>
-                <option value="Semaine 2">Semaine 2</option>
-                <option value="Semaine 3">Semaine 3</option>
-                <option value="Semaine 4">Semaine 4</option>
-                <option value="Semaine 5">Semaine 5</option>
-                <option value="Semaine 6">Semaine 6</option>
-                <option value="Semaine 7">Semaine 7</option>
-                <option value="Semaine 8">Semaine 8</option>
-                <option value="Semaine 9">Semaine 9</option>
-                <option value="Semaine 10">Semaine 10</option>
-                <option value="Semaine 11">Semaine 11</option>
-                <option value="Semaine 12">Semaine 12</option>
-                <option value="Semaine 13">Semaine 13</option>
-                <option value="Semaine 14">Semaine 14</option>
-                <option value="Semaine 15">Semaine 15</option>
-                <option value="Semaine 16">Semaine 16</option>
-                <option value="Semaine 17">Semaine 17</option>
-                <option value="Semaine 18">Semaine 18</option>
-                <option value="Semaine 19">Semaine 19</option>
-                <option value="Semaine 20">Semaine 20</option>
-                <option value="Semaine 21">Semaine 21</option>
-                <option value="Semaine 22">Semaine 22</option>
-                <option value="Semaine 23">Semaine 23</option>
-                <option value="Semaine 24">Semaine 24</option>
-                <option value="Semaine 25">Semaine 25</option>
-                <option value="Semaine 26">Semaine 26</option>
-                <option value="Semaine 27">Semaine 27</option>
-                <option value="Semaine 28">Semaine 28</option>
-                <option value="Semaine 29">Semaine 29</option>
-                <option value="Semaine 30">Semaine 30</option>
-                <option value="Semaine 31">Semaine 31</option>
-            </select>
-            <button onclick="downloadWeeklyExcel()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 35px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4); transition: all 0.3s ease;">
-                <i class="ri-download-2-line"></i> Télécharger Excel
-            </button>
-        </div>
-    </div>
     
     <div style="text-align: center; margin: 40px 0;">
         <button class="section-btn" onclick="showClasses('maternelle')">
@@ -239,6 +189,55 @@
     <!-- Grilles de classes -->
     <div id="maternelle" class="section-classes" style="display: none;">
         <h2 style="color: white; text-align: center;">Maternelle</h2>
+        
+        <!-- Téléchargement Excel pour Maternelle -->
+        <div style="background: white; border-radius: 15px; padding: 25px; margin: 20px auto; max-width: 700px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <h3 style="color: #1f2937; text-align: center; margin-bottom: 15px; font-size: 1.3em;">
+                <i class="ri-file-excel-2-line" style="color: #10b981;"></i> 
+                Télécharger Distribution Hebdomadaire
+            </h3>
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="weekSelectMaternelle" style="font-weight: bold; color: #1f2937;">Semaine :</label>
+                <select id="weekSelectMaternelle" class="week-selector" style="padding: 10px 18px; border-radius: 8px; border: 2px solid #d1d5db; font-size: 15px; min-width: 180px; cursor: pointer;">
+                    <option value="">-- Choisir --</option>
+                    <option value="Semaine 1">Semaine 1</option>
+                    <option value="Semaine 2">Semaine 2</option>
+                    <option value="Semaine 3">Semaine 3</option>
+                    <option value="Semaine 4">Semaine 4</option>
+                    <option value="Semaine 5">Semaine 5</option>
+                    <option value="Semaine 6">Semaine 6</option>
+                    <option value="Semaine 7">Semaine 7</option>
+                    <option value="Semaine 8">Semaine 8</option>
+                    <option value="Semaine 9">Semaine 9</option>
+                    <option value="Semaine 10">Semaine 10</option>
+                    <option value="Semaine 11">Semaine 11</option>
+                    <option value="Semaine 12">Semaine 12</option>
+                    <option value="Semaine 13">Semaine 13</option>
+                    <option value="Semaine 14">Semaine 14</option>
+                    <option value="Semaine 15">Semaine 15</option>
+                    <option value="Semaine 16">Semaine 16</option>
+                    <option value="Semaine 17">Semaine 17</option>
+                    <option value="Semaine 18">Semaine 18</option>
+                    <option value="Semaine 19">Semaine 19</option>
+                    <option value="Semaine 20">Semaine 20</option>
+                    <option value="Semaine 21">Semaine 21</option>
+                    <option value="Semaine 22">Semaine 22</option>
+                    <option value="Semaine 23">Semaine 23</option>
+                    <option value="Semaine 24">Semaine 24</option>
+                    <option value="Semaine 25">Semaine 25</option>
+                    <option value="Semaine 26">Semaine 26</option>
+                    <option value="Semaine 27">Semaine 27</option>
+                    <option value="Semaine 28">Semaine 28</option>
+                    <option value="Semaine 29">Semaine 29</option>
+                    <option value="Semaine 30">Semaine 30</option>
+                    <option value="Semaine 31">Semaine 31</option>
+                </select>
+                <button onclick="downloadWeeklyExcel('maternelle')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 10px 30px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4); transition: all 0.3s ease;">
+                    <i class="ri-download-2-line"></i> Télécharger Excel
+                </button>
+            </div>
+        </div>
+        
         <div class="classes-grid">
             <div class="class-card" onclick="goToClass('TPS', false)">
                 <i class="ri-seedling-line" style="font-size: 2em; color: #10b981;"></i>
@@ -261,6 +260,55 @@
     
     <div id="primaire" class="section-classes" style="display: none;">
         <h2 style="color: white; text-align: center;">Primaire</h2>
+        
+        <!-- Téléchargement Excel pour Primaire -->
+        <div style="background: white; border-radius: 15px; padding: 25px; margin: 20px auto; max-width: 700px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <h3 style="color: #1f2937; text-align: center; margin-bottom: 15px; font-size: 1.3em;">
+                <i class="ri-file-excel-2-line" style="color: #10b981;"></i> 
+                Télécharger Distribution Hebdomadaire
+            </h3>
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="weekSelectPrimaire" style="font-weight: bold; color: #1f2937;">Semaine :</label>
+                <select id="weekSelectPrimaire" class="week-selector" style="padding: 10px 18px; border-radius: 8px; border: 2px solid #d1d5db; font-size: 15px; min-width: 180px; cursor: pointer;">
+                    <option value="">-- Choisir --</option>
+                    <option value="Semaine 1">Semaine 1</option>
+                    <option value="Semaine 2">Semaine 2</option>
+                    <option value="Semaine 3">Semaine 3</option>
+                    <option value="Semaine 4">Semaine 4</option>
+                    <option value="Semaine 5">Semaine 5</option>
+                    <option value="Semaine 6">Semaine 6</option>
+                    <option value="Semaine 7">Semaine 7</option>
+                    <option value="Semaine 8">Semaine 8</option>
+                    <option value="Semaine 9">Semaine 9</option>
+                    <option value="Semaine 10">Semaine 10</option>
+                    <option value="Semaine 11">Semaine 11</option>
+                    <option value="Semaine 12">Semaine 12</option>
+                    <option value="Semaine 13">Semaine 13</option>
+                    <option value="Semaine 14">Semaine 14</option>
+                    <option value="Semaine 15">Semaine 15</option>
+                    <option value="Semaine 16">Semaine 16</option>
+                    <option value="Semaine 17">Semaine 17</option>
+                    <option value="Semaine 18">Semaine 18</option>
+                    <option value="Semaine 19">Semaine 19</option>
+                    <option value="Semaine 20">Semaine 20</option>
+                    <option value="Semaine 21">Semaine 21</option>
+                    <option value="Semaine 22">Semaine 22</option>
+                    <option value="Semaine 23">Semaine 23</option>
+                    <option value="Semaine 24">Semaine 24</option>
+                    <option value="Semaine 25">Semaine 25</option>
+                    <option value="Semaine 26">Semaine 26</option>
+                    <option value="Semaine 27">Semaine 27</option>
+                    <option value="Semaine 28">Semaine 28</option>
+                    <option value="Semaine 29">Semaine 29</option>
+                    <option value="Semaine 30">Semaine 30</option>
+                    <option value="Semaine 31">Semaine 31</option>
+                </select>
+                <button onclick="downloadWeeklyExcel('primaire')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 10px 30px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4); transition: all 0.3s ease;">
+                    <i class="ri-download-2-line"></i> Télécharger Excel
+                </button>
+            </div>
+        </div>
+        
         <div class="classes-grid">
             <div class="class-card" onclick="goToClass('PP1', false)">
                 <i class="ri-bookmark-line" style="font-size: 2em; color: #3b82f6;"></i>
@@ -287,6 +335,55 @@
     
     <div id="secondaire" class="section-classes" style="display: none;">
         <h2 style="color: white; text-align: center;">Secondaire</h2>
+        
+        <!-- Téléchargement Excel pour Secondaire -->
+        <div style="background: white; border-radius: 15px; padding: 25px; margin: 20px auto; max-width: 700px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+            <h3 style="color: #1f2937; text-align: center; margin-bottom: 15px; font-size: 1.3em;">
+                <i class="ri-file-excel-2-line" style="color: #10b981;"></i> 
+                Télécharger Distribution Hebdomadaire
+            </h3>
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="weekSelectSecondaire" style="font-weight: bold; color: #1f2937;">Semaine :</label>
+                <select id="weekSelectSecondaire" class="week-selector" style="padding: 10px 18px; border-radius: 8px; border: 2px solid #d1d5db; font-size: 15px; min-width: 180px; cursor: pointer;">
+                    <option value="">-- Choisir --</option>
+                    <option value="Semaine 1">Semaine 1</option>
+                    <option value="Semaine 2">Semaine 2</option>
+                    <option value="Semaine 3">Semaine 3</option>
+                    <option value="Semaine 4">Semaine 4</option>
+                    <option value="Semaine 5">Semaine 5</option>
+                    <option value="Semaine 6">Semaine 6</option>
+                    <option value="Semaine 7">Semaine 7</option>
+                    <option value="Semaine 8">Semaine 8</option>
+                    <option value="Semaine 9">Semaine 9</option>
+                    <option value="Semaine 10">Semaine 10</option>
+                    <option value="Semaine 11">Semaine 11</option>
+                    <option value="Semaine 12">Semaine 12</option>
+                    <option value="Semaine 13">Semaine 13</option>
+                    <option value="Semaine 14">Semaine 14</option>
+                    <option value="Semaine 15">Semaine 15</option>
+                    <option value="Semaine 16">Semaine 16</option>
+                    <option value="Semaine 17">Semaine 17</option>
+                    <option value="Semaine 18">Semaine 18</option>
+                    <option value="Semaine 19">Semaine 19</option>
+                    <option value="Semaine 20">Semaine 20</option>
+                    <option value="Semaine 21">Semaine 21</option>
+                    <option value="Semaine 22">Semaine 22</option>
+                    <option value="Semaine 23">Semaine 23</option>
+                    <option value="Semaine 24">Semaine 24</option>
+                    <option value="Semaine 25">Semaine 25</option>
+                    <option value="Semaine 26">Semaine 26</option>
+                    <option value="Semaine 27">Semaine 27</option>
+                    <option value="Semaine 28">Semaine 28</option>
+                    <option value="Semaine 29">Semaine 29</option>
+                    <option value="Semaine 30">Semaine 30</option>
+                    <option value="Semaine 31">Semaine 31</option>
+                </select>
+                <button onclick="downloadWeeklyExcel('secondaire')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 10px 30px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4); transition: all 0.3s ease;">
+                    <i class="ri-download-2-line"></i> Télécharger Excel
+                </button>
+            </div>
+        </div>
+        
         <div class="classes-grid">
             <div class="class-card" onclick="goToClass('PEI1', false)">
                 <i class="ri-graduation-cap-line" style="font-size: 2em; color: #8b5cf6;"></i>
@@ -323,6 +420,55 @@
         <h2 style="color: white; text-align: center;">
             <i class="ri-user-star-line"></i> Secondaire Garçons (avec IA)
         </h2>
+        
+        <!-- Téléchargement Excel pour Secondaire Garçons -->
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 15px; padding: 25px; margin: 20px auto; max-width: 700px; box-shadow: 0 8px 20px rgba(240, 147, 251, 0.4);">
+            <h3 style="color: white; text-align: center; margin-bottom: 15px; font-size: 1.3em;">
+                <i class="ri-file-excel-2-line"></i> 
+                Télécharger Distribution Hebdomadaire
+            </h3>
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="weekSelectGarcons" style="font-weight: bold; color: white;">Semaine :</label>
+                <select id="weekSelectGarcons" class="week-selector" style="padding: 10px 18px; border-radius: 8px; border: 2px solid white; font-size: 15px; min-width: 180px; cursor: pointer;">
+                    <option value="">-- Choisir --</option>
+                    <option value="Semaine 1">Semaine 1</option>
+                    <option value="Semaine 2">Semaine 2</option>
+                    <option value="Semaine 3">Semaine 3</option>
+                    <option value="Semaine 4">Semaine 4</option>
+                    <option value="Semaine 5">Semaine 5</option>
+                    <option value="Semaine 6">Semaine 6</option>
+                    <option value="Semaine 7">Semaine 7</option>
+                    <option value="Semaine 8">Semaine 8</option>
+                    <option value="Semaine 9">Semaine 9</option>
+                    <option value="Semaine 10">Semaine 10</option>
+                    <option value="Semaine 11">Semaine 11</option>
+                    <option value="Semaine 12">Semaine 12</option>
+                    <option value="Semaine 13">Semaine 13</option>
+                    <option value="Semaine 14">Semaine 14</option>
+                    <option value="Semaine 15">Semaine 15</option>
+                    <option value="Semaine 16">Semaine 16</option>
+                    <option value="Semaine 17">Semaine 17</option>
+                    <option value="Semaine 18">Semaine 18</option>
+                    <option value="Semaine 19">Semaine 19</option>
+                    <option value="Semaine 20">Semaine 20</option>
+                    <option value="Semaine 21">Semaine 21</option>
+                    <option value="Semaine 22">Semaine 22</option>
+                    <option value="Semaine 23">Semaine 23</option>
+                    <option value="Semaine 24">Semaine 24</option>
+                    <option value="Semaine 25">Semaine 25</option>
+                    <option value="Semaine 26">Semaine 26</option>
+                    <option value="Semaine 27">Semaine 27</option>
+                    <option value="Semaine 28">Semaine 28</option>
+                    <option value="Semaine 29">Semaine 29</option>
+                    <option value="Semaine 30">Semaine 30</option>
+                    <option value="Semaine 31">Semaine 31</option>
+                </select>
+                <button onclick="downloadWeeklyExcel('secondaire-garcons')" style="background: white; color: #f5576c; padding: 10px 30px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;">
+                    <i class="ri-download-2-line"></i> Télécharger Excel
+                </button>
+            </div>
+        </div>
+        
         <div class="classes-grid">
             <div class="class-card" onclick="goToClass('PEI1-G', true)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
                 <i class="ri-robot-line" style="font-size: 2em;"></i>

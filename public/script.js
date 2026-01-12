@@ -886,9 +886,41 @@ function warnIfUnsaved() {
 
 /**
  * Télécharger le fichier Excel hebdomadaire pour toutes les classes et matières
+ * @param {string} section - La section à filtrer : 'maternelle', 'primaire', 'secondaire', 'secondaire-garcons'
  */
-async function downloadWeeklyExcel() {
-  const weekSelect = document.getElementById('weekSelect');
+async function downloadWeeklyExcel(section) {
+  // Déterminer quel sélecteur de semaine utiliser selon la section
+  let weekSelectId;
+  let sectionName;
+  
+  switch(section) {
+    case 'maternelle':
+      weekSelectId = 'weekSelectMaternelle';
+      sectionName = 'Maternelle';
+      break;
+    case 'primaire':
+      weekSelectId = 'weekSelectPrimaire';
+      sectionName = 'Primaire';
+      break;
+    case 'secondaire':
+      weekSelectId = 'weekSelectSecondaire';
+      sectionName = 'Secondaire';
+      break;
+    case 'secondaire-garcons':
+      weekSelectId = 'weekSelectGarcons';
+      sectionName = 'Secondaire Garçons';
+      break;
+    default:
+      alert('Section invalide');
+      return;
+  }
+  
+  const weekSelect = document.getElementById(weekSelectId);
+  if (!weekSelect) {
+    alert('Erreur: sélecteur de semaine introuvable');
+    return;
+  }
+  
   const selectedWeek = weekSelect.value;
   
   if (!selectedWeek) {
@@ -896,7 +928,7 @@ async function downloadWeeklyExcel() {
     return;
   }
   
-  if (!confirm(`Télécharger la distribution de "${selectedWeek}" pour toutes les classes et matières?\n\nCela peut prendre quelques instants.`)) {
+  if (!confirm(`Télécharger la distribution de "${selectedWeek}" pour la section ${sectionName}?\n\nCela peut prendre quelques instants.`)) {
     return;
   }
   
@@ -905,7 +937,7 @@ async function downloadWeeklyExcel() {
     const response = await fetch('/api/downloadWeeklyExcel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ week: selectedWeek })
+      body: JSON.stringify({ week: selectedWeek, section: section })
     });
     
     if (!response.ok) {
@@ -917,13 +949,13 @@ async function downloadWeeklyExcel() {
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
-    a.download = `Distribution_${selectedWeek.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.download = `Distribution_${sectionName.replace(/\s+/g, '_')}_${selectedWeek.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
     
-    showSuccessMessage(`Fichier Excel pour "${selectedWeek}" téléchargé avec succès!`);
+    showSuccessMessage(`Fichier Excel pour "${selectedWeek}" (${sectionName}) téléchargé avec succès!`);
   } catch (error) {
     console.error('Erreur lors du téléchargement Excel hebdomadaire:', error);
     showErrorMessage('Erreur lors de la génération du fichier Excel: ' + error.message);

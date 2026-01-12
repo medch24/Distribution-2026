@@ -487,7 +487,7 @@ app.post('/generateAIDistributionGemini', async (req, res) => {
 // === Download Weekly Excel for All Classes ===
 app.post('/downloadWeeklyExcel', async (req, res) => {
   try {
-    const { week } = req.body;
+    const { week, section } = req.body;
     if (!week) {
       return res.status(400).json({ error: 'Semaine non spécifiée' });
     }
@@ -495,13 +495,27 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
     const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
     
-    // Liste de toutes les classes
-    const allClasses = [
-      'TPS', 'PS', 'MS', 'GS',
-      'PP1', 'PP2', 'PP3', 'PP4', 'PP5',
-      'PEI1', 'PEI2', 'PEI3', 'PEI4', 'PEI5', 'DP1', 'DP2',
-      'PEI1-G', 'PEI2-G', 'PEI3-G', 'PEI4-G', 'DP2-G'
-    ];
+    // Définir les classes par section
+    const sectionClasses = {
+      'maternelle': ['TPS', 'PS', 'MS', 'GS'],
+      'primaire': ['PP1', 'PP2', 'PP3', 'PP4', 'PP5'],
+      'secondaire': ['PEI1', 'PEI2', 'PEI3', 'PEI4', 'PEI5', 'DP1', 'DP2'],
+      'secondaire-garcons': ['PEI1-G', 'PEI2-G', 'PEI3-G', 'PEI4-G', 'DP2-G']
+    };
+    
+    // Déterminer les classes à traiter selon la section
+    let allClasses;
+    if (section && sectionClasses[section]) {
+      allClasses = sectionClasses[section];
+    } else {
+      // Si pas de section spécifiée, toutes les classes
+      allClasses = [
+        'TPS', 'PS', 'MS', 'GS',
+        'PP1', 'PP2', 'PP3', 'PP4', 'PP5',
+        'PEI1', 'PEI2', 'PEI3', 'PEI4', 'PEI5', 'DP1', 'DP2',
+        'PEI1-G', 'PEI2-G', 'PEI3-G', 'PEI4-G', 'DP2-G'
+      ];
+    }
     
     // Matières par classe (défini dans le frontend, on le réplique ici)
     const classSubjects = {
