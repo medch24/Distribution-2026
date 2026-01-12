@@ -10,18 +10,26 @@
     "clean": "rm -rf node_modules package-lock.json && npm install"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "convertapi": "^1.15.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^4.19.2",
+    "mammoth": "^1.8.0",
     "mongodb": "^6.5.0",
-    "openai": "^4.57.0",
-    "mammoth": "^1.8.0"
+    "openai": "^4.57.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["education", "planning", "distribution", "scolaire", "mongodb", "express"],
+  "keywords": [
+    "education",
+    "planning",
+    "distribution",
+    "scolaire",
+    "mongodb",
+    "express"
+  ],
   "author": "Distribution Annuelle Team",
   "license": "MIT"
 }

@@ -484,5 +484,185 @@ app.post('/generateAIDistributionGemini', async (req, res) => {
   }
 });
 
+// === Download Weekly Excel for All Classes ===
+app.post('/downloadWeeklyExcel', async (req, res) => {
+  try {
+    const { week } = req.body;
+    if (!week) {
+      return res.status(400).json({ error: 'Semaine non spécifiée' });
+    }
+    
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    
+    // Liste de toutes les classes
+    const allClasses = [
+      'TPS', 'PS', 'MS', 'GS',
+      'PP1', 'PP2', 'PP3', 'PP4', 'PP5',
+      'PEI1', 'PEI2', 'PEI3', 'PEI4', 'PEI5', 'DP1', 'DP2',
+      'PEI1-G', 'PEI2-G', 'PEI3-G', 'PEI4-G', 'DP2-G'
+    ];
+    
+    // Matières par classe (défini dans le frontend, on le réplique ici)
+    const classSubjects = {
+      'TPS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'PS': ['Français', 'Maths', 'Sciences', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'MS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'GS': ['Français', 'Maths', 'Sciences', 'Informatique', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'PP1': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'PP2': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'PP3': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Montessori', 'Musique', 'Bibliothèque'],
+      'PP4': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences humaines', 'Sciences naturelles', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'],
+      'PP5': ['Français', 'Maths', 'Anglais', 'French second language', 'Informatique', 'Sciences Naturelles', 'Sciences Humaines', 'ART', 'Éducation physique', 'Musique', 'Bibliothèque'],
+      'PEI1': ['Langue et littérature', 'Maths', 'Sciences', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI2': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI3': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI4': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI5': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'SNT', 'SES', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'DP1': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Philosophie', 'SES', 'Individus et Sociétés', 'Éducation physique', 'ART'],
+      'DP2': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Philosophie', 'SES', 'Individus et Sociétés', 'Éducation physique', 'ART'],
+      'PEI1-G': ['Langue et littérature', 'Maths', 'Sciences', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI2-G': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI3-G': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'PEI4-G': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Design', 'Individus et Sociétés', 'Éducation physique', 'Musique', 'Bibliothèque', 'ART'],
+      'DP2-G': ['Langue et littérature', 'Maths', 'Biologie', 'Physique-chimie', 'Anglais', 'Philosophie', 'SES', 'Individus et Sociétés', 'Éducation physique', 'ART']
+    };
+    
+    // Créer une feuille unique avec toutes les données
+    const worksheet = workbook.addWorksheet('Distribution Hebdomadaire');
+    
+    // Format: Classe, Matière, Période, Leçon, Travaux de classe, Support (leçon), Devoirs (fusionner Devoirs et Support devoirs)
+    worksheet.columns = [
+      { header: 'Classe', key: 'classe', width: 12 },
+      { header: 'Matière', key: 'matiere', width: 25 },
+      { header: 'Période', key: 'periode', width: 15 },
+      { header: 'Leçon', key: 'lecon', width: 30 },
+      { header: 'Travaux de classe', key: 'travaux', width: 30 },
+      { header: 'Support (leçon)', key: 'support_lecon', width: 25 },
+      { header: 'Devoirs', key: 'devoirs', width: 40 }
+    ];
+    
+    // Styliser l'en-tête
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF4472C4' }
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+    
+    // Récupérer les données pour toutes les classes
+    let rowCount = 0;
+    for (const className of allClasses) {
+      const db = await connectToClassDatabase(className);
+      if (!db) continue;
+      
+      const subjects = classSubjects[className] || [];
+      for (const subject of subjects) {
+        try {
+          const collection = db.collection(subject);
+          const data = await collection.find({}).toArray();
+          
+          if (!data || data.length === 0) continue;
+          
+          // Filtrer par semaine
+          const weekData = data.filter(row => 
+            row && row['Semaine'] === week && row.type === 'Cours'
+          );
+          
+          // Grouper par période (séance)
+          const sessions = {};
+          weekData.forEach(row => {
+            const periode = row['Date'] || 'N/A';
+            if (!sessions[periode]) {
+              sessions[periode] = {
+                lecon: row['Contenu de la leçon'] || '',
+                travaux: row['Unité/Chapitre'] || '',
+                support_lecon: row['Ressources pour les leçons'] || '',
+                devoir: row['Devoir'] || '',
+                support_devoir: row['Ressources pour les devoirs'] || ''
+              };
+            }
+          });
+          
+          // Ajouter les lignes au worksheet
+          Object.entries(sessions).forEach(([periode, session]) => {
+            // Fusionner Devoirs et Support devoirs
+            let devoirsCombined = '';
+            if (session.devoir && session.support_devoir) {
+              devoirsCombined = `${session.devoir} (Support: ${session.support_devoir})`;
+            } else if (session.devoir) {
+              devoirsCombined = session.devoir;
+            } else if (session.support_devoir) {
+              devoirsCombined = `Support: ${session.support_devoir}`;
+            }
+            
+            const row = worksheet.addRow({
+              classe: className.replace('-G', ' (Garçons)'),
+              matiere: subject,
+              periode: periode,
+              lecon: session.lecon,
+              travaux: session.travaux,
+              support_lecon: session.support_lecon,
+              devoirs: devoirsCombined
+            });
+            
+            // Alterner les couleurs des lignes
+            if (rowCount % 2 === 0) {
+              row.eachCell((cell) => {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFF2F2F2' }
+                };
+              });
+            }
+            
+            // Bordures
+            row.eachCell((cell) => {
+              cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+              };
+              cell.alignment = { vertical: 'top', wrapText: true };
+            });
+            
+            rowCount++;
+          });
+        } catch (err) {
+          console.error(`Erreur pour ${className} - ${subject}:`, err);
+        }
+      }
+    }
+    
+    if (rowCount === 0) {
+      return res.status(404).json({ 
+        error: 'Aucune donnée trouvée pour cette semaine' 
+      });
+    }
+    
+    // Générer le buffer Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Distribution_${week.replace(/\s+/g, '_')}.xlsx"`);
+    res.send(buffer);
+    
+  } catch (error) {
+    console.error('Error in downloadWeeklyExcel:', error);
+    res.status(500).json({ error: 'Erreur lors de la génération du fichier Excel: ' + error.message });
+  }
+});
+
 // Export handler for Vercel serverless (@vercel/node)
 module.exports = (req, res) => app(req, res);

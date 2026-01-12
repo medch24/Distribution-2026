@@ -883,3 +883,51 @@ function warnIfUnsaved() {
   }
   return true;
 }
+
+/**
+ * Télécharger le fichier Excel hebdomadaire pour toutes les classes et matières
+ */
+async function downloadWeeklyExcel() {
+  const weekSelect = document.getElementById('weekSelect');
+  const selectedWeek = weekSelect.value;
+  
+  if (!selectedWeek) {
+    alert('Veuillez sélectionner une semaine avant de télécharger.');
+    return;
+  }
+  
+  if (!confirm(`Télécharger la distribution de "${selectedWeek}" pour toutes les classes et matières?\n\nCela peut prendre quelques instants.`)) {
+    return;
+  }
+  
+  showProgressBar();
+  try {
+    const response = await fetch('/api/downloadWeeklyExcel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ week: selectedWeek })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erreur du serveur: ${response.status}`);
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `Distribution_${selectedWeek.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    showSuccessMessage(`Fichier Excel pour "${selectedWeek}" téléchargé avec succès!`);
+  } catch (error) {
+    console.error('Erreur lors du téléchargement Excel hebdomadaire:', error);
+    showErrorMessage('Erreur lors de la génération du fichier Excel: ' + error.message);
+  } finally {
+    hideProgressBar();
+  }
+}
