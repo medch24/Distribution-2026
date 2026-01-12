@@ -941,7 +941,20 @@ async function downloadWeeklyExcel(section) {
     });
     
     if (!response.ok) {
-      throw new Error(`Erreur du serveur: ${response.status}`);
+      let errorMessage = `Erreur du serveur: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+        
+        // Afficher les détails supplémentaires si disponibles
+        if (errorData.details) {
+          console.error('Détails de l\'erreur:', errorData.details);
+          errorMessage += `\n\nDétails:\n- Classes traitées: ${errorData.details.classesProcessed || 0}\n- Classes avec données: ${errorData.details.classesWithData || 0}\n- MongoDB configuré: ${errorData.details.mongoConfigured ? 'Oui' : 'Non'}`;
+        }
+      } catch (e) {
+        // Erreur lors du parsing JSON
+      }
+      throw new Error(errorMessage);
     }
     
     const blob = await response.blob();

@@ -488,8 +488,18 @@ app.post('/generateAIDistributionGemini', async (req, res) => {
 app.post('/downloadWeeklyExcel', async (req, res) => {
   try {
     const { week, section } = req.body;
+    console.log('[downloadWeeklyExcel] Request received:', { week, section });
+    
     if (!week) {
       return res.status(400).json({ error: 'Semaine non spécifiée' });
+    }
+    
+    // Vérifier que MongoDB est configuré
+    if (!MONGO_URL) {
+      console.error('[downloadWeeklyExcel] MongoDB non configuré');
+      return res.status(500).json({ 
+        error: 'La base de données n\'est pas configurée. Veuillez configurer MONGO_URL dans les variables d\'environnement.' 
+      });
     }
     
     const ExcelJS = require('exceljs');
@@ -575,26 +585,38 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
     
     // Récupérer les données pour toutes les classes
     let rowCount = 0;
+    let classesProcessed = 0;
+    let classesWithData = 0;
+    
+    console.log(`[downloadWeeklyExcel] Processing ${allClasses.length} classes for week ${week}`);
+    
     for (const className of allClasses) {
+      classesProcessed++;
       const db = await connectToClassDatabase(className);
-      if (!db) continue;
+      if (!db) {
+        console.log(`[downloadWeeklyExcel] Could not connect to DB for class ${className}`);
+        continue;
+      }
       
       const subjects = classSubjects[className] || [];
+      let classHasData = false;
+      
       for (const subject of subjects) {
         try {
           const collection = db.collection(subject);
-          const data = await collection.find({}).toArray();
+          // Optimisation: filtrer directement dans MongoDB au lieu de tout charger
+          const data = await collection.find({ 
+            'Semaine': week,
+            'type': 'Cours'
+          }).limit(100).toArray();
           
           if (!data || data.length === 0) continue;
           
-          // Filtrer par semaine
-          const weekData = data.filter(row => 
-            row && row['Semaine'] === week && row.type === 'Cours'
-          );
+          classHasData = true;
           
           // Grouper par période (séance)
           const sessions = {};
-          weekData.forEach(row => {
+          data.forEach(row => {
             const periode = row['Date'] || 'N/A';
             if (!sessions[periode]) {
               sessions[periode] = {
@@ -654,14 +676,27 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
             rowCount++;
           });
         } catch (err) {
-          console.error(`Erreur pour ${className} - ${subject}:`, err);
+          console.error(`[downloadWeeklyExcel] Erreur pour ${className} - ${subject}:`, err.message);
         }
+      }
+      
+      if (classHasData) {
+        classesWithData++;
       }
     }
     
+    console.log(`[downloadWeeklyExcel] Processed ${classesProcessed} classes, ${classesWithData} with data, ${rowCount} total rows`);
+    
     if (rowCount === 0) {
       return res.status(404).json({ 
-        error: 'Aucune donnée trouvée pour cette semaine' 
+        error: `Aucune donnée trouvée pour ${week}${section ? ` (section ${section})` : ''}. Vérifiez que des données ont été enregistrées dans la base de données.`,
+        details: {
+          week,
+          section,
+          classesProcessed,
+          classesWithData,
+          mongoConfigured: !!MONGO_URL
+        }
       });
     }
     
