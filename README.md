@@ -219,6 +219,17 @@ Langue et littérature, Maths, Sciences, Anglais, French second language, Design
 
 ## 🐛 Débogage
 
+### ✅ Export Excel Hebdomadaire - Erreur "Aucune donnée trouvée"
+**Corrigé le 12/01/2026** - Commit `cfe8511`
+
+**Problème** : Le système affichait "Aucune donnée trouvée pour Semaine X" même quand les données étaient enregistrées
+
+**Cause** : Le code essayait d'accéder à `db.collection(subject)` au lieu de `db.collection('tables').findOne({ sheetName: subject })`
+
+**Solution** : Correction de l'accès à la structure MongoDB réelle où toutes les matières d'une classe sont dans la collection `'tables'`
+
+📖 Voir [CRITICAL_FIX_EXCEL_EXPORT.md](./CRITICAL_FIX_EXCEL_EXPORT.md) pour les détails complets
+
 ### Le site s'actualise automatiquement
 ✅ **Corrigé** : La fonction `location.reload()` a été remplacée par des notifications
 
@@ -255,6 +266,15 @@ Les contributions sont les bienvenues !
 ---
 
 ## 📝 Changelog
+
+### Version 2.1.2 (12 janvier 2026) 🔧 CORRECTION CRITIQUE
+- 🔥 **FIX MAJEUR** : Export Excel hebdomadaire - Erreur "Aucune donnée trouvée" résolu
+- ✅ Correction de l'accès MongoDB : utilise `db.collection('tables').findOne()` au lieu de `db.collection(subject)`
+- ✅ Filtrage correct des données existantes dans l'array `tableDoc.data`
+- ✅ Support des variantes de champs : 'Semaine' et 'Sem.'
+- ✅ Logs détaillés pour le débogage
+- ✅ Compatible avec toutes les données déjà enregistrées par les enseignants
+- 📖 Documentation complète : [CRITICAL_FIX_EXCEL_EXPORT.md](./CRITICAL_FIX_EXCEL_EXPORT.md)
 
 ### Version 2.1.1 (12 janvier 2026)
 - ✅ **Correction format Excel** : Format conforme aux exigences
