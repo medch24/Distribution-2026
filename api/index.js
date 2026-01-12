@@ -604,32 +604,27 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
       
       for (const subject of subjects) {
         try {
-          const collection = db.collection(subject);
+          // Les données sont stockées dans la collection 'tables' avec sheetName comme clé
+          const tableDoc = await db.collection('tables').findOne({ sheetName: subject });
           
-          // Chercher d'abord avec 'Semaine', puis essayer 'Sem.' si aucun résultat
-          let data = await collection.find({ 
-            'Semaine': week
-          }).sort({ 'Séan.': 1 }).limit(100).toArray();
-          
-          // Si aucun résultat, essayer avec 'Sem.'
-          if (!data || data.length === 0) {
-            data = await collection.find({ 
-              'Sem.': week
-            }).sort({ 'Séan.': 1 }).limit(100).toArray();
+          if (!tableDoc || !tableDoc.data || !Array.isArray(tableDoc.data)) {
+            console.log(`[downloadWeeklyExcel] No table found for ${className} - ${subject}`);
+            continue;
           }
           
-          // Si toujours rien, essayer sans filtre de type
-          if (!data || data.length === 0) {
-            // Peut-être que la semaine est stockée différemment
-            const allData = await collection.find({}).limit(200).toArray();
-            console.log(`[downloadWeeklyExcel] Sample data for ${className}-${subject}:`, allData.slice(0, 2));
+          // Filtrer les données pour la semaine demandée
+          const data = tableDoc.data.filter(row => {
+            if (!row || typeof row !== 'object') return false;
             
-            // Filtrer manuellement
-            data = allData.filter(row => {
-              const semaine = row['Semaine'] || row['Sem.'] || '';
-              return semaine === week || semaine.includes(week.replace('Semaine ', ''));
-            });
-          }
+            // Vérifier différentes variantes du champ semaine
+            const semaine = row['Semaine'] || row['Sem.'] || '';
+            
+            // Comparer directement ou chercher le numéro
+            if (semaine === week) return true;
+            if (semaine.includes(week.replace('Semaine ', ''))) return true;
+            
+            return false;
+          });
           
           if (!data || data.length === 0) {
             console.log(`[downloadWeeklyExcel] No data found for ${className} - ${subject} - ${week}`);
@@ -639,7 +634,7 @@ app.post('/downloadWeeklyExcel', async (req, res) => {
           classHasData = true;
           console.log(`[downloadWeeklyExcel] Found ${data.length} sessions for ${className} - ${subject}`);
           
-          // Utiliser le numéro de séance existant ou créer un compteur
+          // Utiliser le numéro de séance existant
           data.forEach(row => {
             const seanceNum = row['Séan.'] || row['Seance'] || row['Séance'] || '';
             const rowData = worksheet.addRow({
